@@ -27,6 +27,7 @@ return false;
 
 10==10;
 10!=9;
+let wow = "yay";
 
 `
 
@@ -106,6 +107,11 @@ return false;
 		{token.INT, "10"},
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "wow"},
+		{token.ASSIGN, "="},
+		{token.STRING, "yay"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}

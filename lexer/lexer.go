@@ -97,6 +97,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LESSER, l.ch)
 	case '>':
 		tok = newToken(token.GREATER, l.ch)
+	case '"':
+		tok.Literal = l.readString() // read the string literal
+		tok.Type = token.STRING
+		return tok
 
 	case 0:
 		// tok = newToken(token.EOF, "") cant do this cuz newToken changes the byte to string
@@ -144,6 +148,21 @@ func (l *Lexer) readIdentifier() string {
 
 	}
 
+	return s
+
+}
+
+func (l *Lexer) readString() string {
+	// red until next "
+	s := ""
+	// s += string(l.ch)
+	l.readChar()
+	for l.ch != '"' {
+		s += string(l.ch)
+		l.readChar()
+	}
+	// s += string(l.ch) //the closing "
+	l.readChar() // read the closing "
 	return s
 
 }

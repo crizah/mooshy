@@ -28,6 +28,7 @@ const (
 	GREATER  = ">"
 	EQ       = "=="
 	NOT_EQ   = "!="
+	QUOTE    = '"'
 
 	// symbols
 	LPAREN    = "("
@@ -38,8 +39,9 @@ const (
 	SEMICOLON = ";"
 
 	// literals and identifiers
-	INT   = "INT"
-	IDENT = "IDENT" // used for identifiers that are not keywords
+	INT    = "INT"
+	IDENT  = "IDENT"
+	STRING = "STRING"
 
 	// errors
 	ILLEGAL = "ILLEGAL" // token we have not defined
