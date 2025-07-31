@@ -65,7 +65,17 @@ func (l *Lexer) NextToken() token.Token {
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		if l.peekChar() == '=' {
+			fmt.Println("yeah")
+			tok.Literal = "=="  // read the next character
+			tok.Type = token.EQ // set the type to EQ
+			l.readChar()
+
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+
+		}
+
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
 	case '-':
@@ -75,7 +85,15 @@ func (l *Lexer) NextToken() token.Token {
 	case '/':
 		tok = newToken(token.DIVIDE, l.ch)
 	case '!':
-		tok = newToken(token.NOT, l.ch)
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok.Literal = string(ch) + string(l.ch)
+			tok.Type = token.NOT_EQ
+		} else {
+			tok = newToken(token.NOT, l.ch)
+		}
+
 	case '<':
 		tok = newToken(token.LESSER, l.ch)
 	case '>':
@@ -104,11 +122,8 @@ func (l *Lexer) NextToken() token.Token {
 		}
 		if isNumber(l.ch) {
 
-			fmt.Println("yeah")
 			tok.Literal = l.readNumber() // function reads the string until non-number and then returns its literal
 			tok.Type = token.INT
-			// l.readChar()
-
 			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch) // if its not a letter, then its an illegal token
@@ -133,7 +148,13 @@ func (l *Lexer) readIdentifier() string {
 	return s
 
 }
-
+func (l *Lexer) peekChar() byte {
+	if l.currPosition >= len(l.input) {
+		return 0 // end of input
+	} else {
+		return l.input[l.currPosition] // return the next character without moving the pointer
+	}
+}
 func isNumber(ch byte) bool {
 	return ch >= '0' && ch <= '9'
 
@@ -156,11 +177,6 @@ func (l *Lexer) getType(literal string) token.TokenType {
 	if tok, ok := keywords[literal]; ok { // map lookup with boolean check
 		return tok // if its a keyword, return the keyword as a token type
 	}
-
-	// if _, err := strconv.Atoi(literal); err == nil { // if its an integer, return the int token type
-	// 	return token.INT
-	// }
-
 	return token.IDENT // otherwise, its an identifier or variable
 
 }
