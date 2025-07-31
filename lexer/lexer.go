@@ -161,7 +161,7 @@ func (l *Lexer) getType(literal string) token.TokenType {
 	// 	return token.INT
 	// }
 
-	return token.VARIABLE // otherwise, its an identifier or variable
+	return token.IDENT // otherwise, its an identifier or variable
 
 }
 func isLetter(ch byte) bool {
