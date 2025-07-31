@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"mooshy/token"
 )
 
@@ -66,7 +65,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.SEMICOLON, l.ch)
 	case '=':
 		if l.peekChar() == '=' {
-			fmt.Println("yeah")
+
 			tok.Literal = "=="  // read the next character
 			tok.Type = token.EQ // set the type to EQ
 			l.readChar()
