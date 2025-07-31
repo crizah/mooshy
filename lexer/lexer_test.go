@@ -28,6 +28,7 @@ return false;
 10==10;
 10!=9;
 let wow = "yay";
+let x_128 = 7;
 
 `
 
@@ -112,6 +113,11 @@ let wow = "yay";
 		{token.IDENT, "wow"},
 		{token.ASSIGN, "="},
 		{token.STRING, "yay"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "x_128"},
+		{token.ASSIGN, "="},
+		{token.INT, "7"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}

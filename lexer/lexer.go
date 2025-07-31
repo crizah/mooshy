@@ -4,6 +4,8 @@ import (
 	"mooshy/token"
 )
 
+// implement arrays at some point
+
 type Lexer struct {
 	input        string
 	prevPosition int  // index of char thats just been read, need to keep acount of this for parser
@@ -139,12 +141,31 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) readIdentifier() string {
-	// read until its not a letter and return its literal
+	// read until its not a letter/number and return its literal
+
 	s := ""
 
 	for isLetter(l.ch) {
 		s += string(l.ch) // append the character to the string
 		l.readChar()      // move to the next character
+
+	}
+
+	// a_1 can be identifier
+
+	if isWhitespace(l.ch) {
+		// end of identifier
+		return s
+
+	}
+
+	if isNumber(l.ch) {
+		//
+		for isNumber(l.ch) {
+			s += string(l.ch)
+			l.readChar()
+		}
+		return s
 
 	}
 
@@ -195,6 +216,7 @@ func (l *Lexer) getType(literal string) token.TokenType {
 	if tok, ok := keywords[literal]; ok { // map lookup with boolean check
 		return tok // if its a keyword, return the keyword as a token type
 	}
+
 	return token.IDENT // otherwise, its an identifier or variable
 
 }
