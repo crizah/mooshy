@@ -18,17 +18,21 @@ const (
 	FALSE  = "FALSE"
 
 	// operators
-	ASSIGN   = "="
-	PLUS     = "+"
-	MINUS    = "-"
-	MULTIPLY = "*"
-	DIVIDE   = "/"
-	NOT      = "!"
-	LESSER   = "<"
-	GREATER  = ">"
-	EQ       = "=="
-	NOT_EQ   = "!="
-	QUOTE    = '"'
+	ASSIGN       = "="
+	PLUS         = "+"
+	MINUS        = "-"
+	MULTIPLY     = "*"
+	DIVIDE       = "/"
+	NOT          = "!"
+	LESSER       = "<"
+	GREATER      = ">"
+	EQ           = "=="
+	NOT_EQ       = "!="
+	QUOTE        = '"'
+	LESSER_EQAL  = "<="
+	GREATER_EQAL = ">="
+	INCREMENT    = "++"
+	DECREMENT    = "--"
 
 	// symbols
 	LPAREN    = "("
@@ -48,13 +52,3 @@ const (
 	EOF     = "EOF"     // signifies end of file
 
 )
-
-// var keywords = map[string]TokenType{
-// 	"let":    LET,
-// 	"func":   FUNC,
-// 	"if":     IF,
-// 	"else":   ELSE,
-// 	"return": RETURN,
-// 	"true":   TRUE,
-// 	"false":  FALSE,
-// }

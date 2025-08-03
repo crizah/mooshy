@@ -8,17 +8,17 @@ import (
 
 type Lexer struct {
 	input        string
-	prevPosition int  // index of char thats just been read, need to keep acount of this for parser
-	currPosition int  // index of next char to read
+	currPosition int  // index of char thats just been read, need to keep acount of this for parser
+	peekPosition int  // index of next char to read
 	ch           byte // char being processed
 
 }
 
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
-	// l.currPosition = 0 // starting poiunts
-	// l.prevPosition = -1
-	// l.ch = input[l.currPosition]
+	// l.peekPosition = 0 // starting poiunts
+	// l.currPosition = -1
+	// l.ch = input[l.peekPosition]
 	l.readChar()
 	return l
 }
@@ -26,13 +26,13 @@ func New(input string) *Lexer {
 func (l *Lexer) readChar() { // defined like this means we can call it like l.readChar() and it will work on l's data
 	// this is to update pointers of the lexer
 
-	if l.currPosition >= len(l.input) {
+	if l.peekPosition >= len(l.input) {
 		l.ch = 0 // end of input
 	} else {
-		l.ch = l.input[l.currPosition]
+		l.ch = l.input[l.peekPosition]
 	}
-	l.prevPosition = l.currPosition
-	l.currPosition++
+	l.currPosition = l.peekPosition
+	l.peekPosition++
 }
 
 func newToken(operator token.TokenType, character byte) token.Token {
@@ -78,27 +78,61 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		if l.peekChar() == '+' {
+			tok.Literal = "++"
+			tok.Type = token.INCREMENT
+			l.readChar()
+		} else {
+			tok = newToken(token.PLUS, l.ch)
+
+		}
+
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		if l.peekChar() == '-' {
+			tok.Literal = "--"
+			tok.Type = token.DECREMENT
+			l.readChar()
+
+		} else {
+			tok = newToken(token.MINUS, l.ch)
+
+		}
+
 	case '*':
 		tok = newToken(token.MULTIPLY, l.ch)
 	case '/':
 		tok = newToken(token.DIVIDE, l.ch)
 	case '!':
 		if l.peekChar() == '=' {
-			ch := l.ch
-			l.readChar()
-			tok.Literal = string(ch) + string(l.ch)
+
+			tok.Literal = "!="
 			tok.Type = token.NOT_EQ
+			l.readChar()
 		} else {
 			tok = newToken(token.NOT, l.ch)
 		}
 
 	case '<':
-		tok = newToken(token.LESSER, l.ch)
+		if l.peekChar() == '=' {
+			tok.Literal = "<="
+			tok.Type = token.LESSER_EQAL
+			l.readChar()
+
+		} else {
+			tok = newToken(token.LESSER, l.ch)
+
+		}
+
 	case '>':
-		tok = newToken(token.GREATER, l.ch)
+		if l.peekChar() == '=' {
+			tok.Literal = ">="
+			tok.Type = token.GREATER_EQAL
+			l.readChar()
+		} else {
+			tok = newToken(token.GREATER, l.ch)
+
+		}
+
 	case '"':
 		tok.Literal = l.readString() // read the string literal
 		tok.Type = token.STRING
@@ -188,10 +222,10 @@ func (l *Lexer) readString() string {
 
 }
 func (l *Lexer) peekChar() byte {
-	if l.currPosition >= len(l.input) {
+	if l.peekPosition >= len(l.input) {
 		return 0 // end of input
 	} else {
-		return l.input[l.currPosition] // return the next character without moving the pointer
+		return l.input[l.peekPosition] // return the next character without moving the pointer
 	}
 }
 func isNumber(ch byte) bool {

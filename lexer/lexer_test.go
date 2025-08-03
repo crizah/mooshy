@@ -18,8 +18,8 @@ x + y;
 let result = add(numberOne, numberTwo);
 
 !-/*5;
-5 < 10 > 5;
-if (5 < 10) {
+5 <=  10 >= 5;
+if (5 <10) {
 return true;
 } else {
 return false;
@@ -29,6 +29,10 @@ return false;
 10!=9;
 let wow = "yay";
 let x_128 = 7;
+
+x_128++;
+x_128--;
+
 
 `
 
@@ -79,9 +83,9 @@ let x_128 = 7;
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 		{token.INT, "5"},
-		{token.LESSER, "<"},
+		{token.LESSER_EQAL, "<="},
 		{token.INT, "10"},
-		{token.GREATER, ">"},
+		{token.GREATER_EQAL, ">="},
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 		{token.IF, "if"},
@@ -118,6 +122,12 @@ let x_128 = 7;
 		{token.IDENT, "x_128"},
 		{token.ASSIGN, "="},
 		{token.INT, "7"},
+		{token.SEMICOLON, ";"},
+		{token.IDENT, "x_128"},
+		{token.INCREMENT, "++"},
+		{token.SEMICOLON, ";"},
+		{token.IDENT, "x_128"},
+		{token.DECREMENT, "--"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
