@@ -1,9 +1,13 @@
 package ast
 
-import "mooshy/token"
+import (
+	"bytes"
+	"mooshy/token"
+)
 
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 type Statement interface {
@@ -35,6 +39,15 @@ func (p *Program) TokenLiteral() string {
 	return ""
 }
 
+func (p *Program) String() string {
+	var output bytes.Buffer
+	for _, st := range p.Statements {
+		output.WriteString(st.String())
+
+	}
+	return output.String()
+}
+
 type LetStatement struct {
 	// this is a node of type Statement
 
@@ -46,6 +59,21 @@ type LetStatement struct {
 	Token token.Token // LET
 	Name  *Identifier // x
 	Value Expression  // this is a node of type Experession, 5
+}
+
+func (ls *LetStatement) String() string {
+	// let x = 5;
+	var output bytes.Buffer
+
+	output.WriteString(ls.TokenLiteral() + " ")
+	output.WriteString(ls.Name.String() + " = ")
+	if ls.Value != nil {
+		output.WriteString(ls.Value.String())
+	}
+	output.WriteString(";")
+
+	return output.String()
+
 }
 
 func (ls *LetStatement) TokenLiteral() string {
@@ -71,8 +99,26 @@ type Identifier struct {
 	Value string //idk what the pint of this is, it can just be TokenLiteral()
 }
 
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) ExpressionNode() {}
+func (il *IntegerLiteral) String() string {
+	return il.Token.Literal
+
+}
+
+func (il *IntegerLiteral) TokenLiteral() string {
+	return il.Token.Literal
+}
+func (id *Identifier) String() string {
+	return id.Value
+}
+
 func (i *Identifier) TokenLiteral() string {
-	// here, we need to define Token.Literal() as its not included in Identifier struct
+
 	return i.Token.Literal
 
 }
@@ -87,3 +133,36 @@ func (rt *ReturnStatement) TokenLiteral() string {
 	return rt.Token.Literal
 }
 func (rt *ReturnStatement) StatementNode() {}
+
+func (rs *ReturnStatement) String() string {
+	var output bytes.Buffer
+	// return x;
+	output.WriteString(rs.TokenLiteral() + " ")
+	if rs.Value != nil {
+		output.WriteString(rs.Value.Value)
+
+	}
+	output.WriteString(";")
+	return output.String()
+
+}
+
+type ExpressionStatement struct {
+	Token      token.Token
+	Expression Expression
+}
+
+// func (ex *ExpressionStatement.Expression) ExpressionNode() {}
+
+func (ex *ExpressionStatement) TokenLiteral() string {
+	return ex.Token.Literal
+}
+
+func (ex *ExpressionStatement) StatementNode() {}
+
+func (ex *ExpressionStatement) String() string {
+	if ex.Expression != nil {
+		return ex.Expression.String()
+	}
+	return ""
+}

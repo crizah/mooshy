@@ -3,6 +3,7 @@ package parser
 import (
 	"mooshy/ast"
 	"mooshy/lexer"
+	"mooshy/token"
 	"testing"
 )
 
@@ -101,5 +102,48 @@ func testReturnStatement(t *testing.T, st ast.Statement, exName string) bool {
 		return false
 	}
 	return true
+
+}
+
+func TestExpression(t *testing.T) {
+	input := `5;`
+	l := lexer.New(input)
+	// fmt.Printf("check1")
+	p := New(l)
+	// fmt.Printf("check2\n")
+
+	program := p.ParseProgram()
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 2 statements. got=%d",
+			len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("program.Statements is not ExpressionStatement. got %T ", program.Statements[0])
+		return
+	}
+	// fmt.Printf("check3\n")
+	ident, ok := stmt.Expression.(*ast.IntegerLiteral)
+
+	if !ok {
+		t.Errorf("stmt.Expression is not IntegerLiteral. got %T", stmt.Expression)
+		return
+	}
+
+	if ident.Token.Type != token.INT {
+		t.Errorf("ident.Token.Type not INT. got=%q", ident.Token.Type)
+		return
+	}
+
+	if ident.Value != 5 {
+		t.Error("ident.Value not 5. got=", ident.Value)
+		return
+	}
+
+	if ident.TokenLiteral() != "5" {
+		t.Errorf("ident.TokenLiteral not '5'. got=%q", ident.TokenLiteral())
+		return
+	}
 
 }
