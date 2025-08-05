@@ -179,6 +179,20 @@ type InfixExpression struct {
 	Right    Expression
 }
 
+type BoolExpression struct {
+	Token token.Token
+	Value bool
+}
+
+func (be *BoolExpression) String() string {
+	return be.Token.Literal
+}
+
+func (be *BoolExpression) TokenLiteral() string {
+	return be.Token.Literal
+}
+
+func (be *BoolExpression) ExpressionNode() {}
 func (in *InfixExpression) String() string {
 	var output bytes.Buffer
 	// convert int64 to string
