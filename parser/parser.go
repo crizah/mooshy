@@ -7,6 +7,28 @@ import (
 	"strconv"
 )
 
+const (
+	_           int = iota // increments, skips 0 for prioroty of an expression
+	LOWEST                 // strings, numbers
+	EQUALS                 // ==
+	LESSGREATER            // > or <
+	SUM                    // + or -
+	PRODUCT                // * or /
+	PREFIX                 // -X or !X
+	CALL                   // myFunction(X)
+)
+
+var precedences = map[token.TokenType]int{
+	token.EQ:       EQUALS,
+	token.NOT_EQ:   EQUALS,
+	token.LESSER:   LESSGREATER,
+	token.GREATER:  LESSGREATER,
+	token.PLUS:     SUM,
+	token.MINUS:    SUM,
+	token.DIVIDE:   PRODUCT,
+	token.MULTIPLY: PRODUCT,
+}
+
 type Parser struct {
 	lexer            *lexer.Lexer
 	currToken        token.Token
@@ -27,6 +49,20 @@ type (
 
 // }
 
+func (p *Parser) peekPrecedence() int {
+	if p, ok := precedences[p.peekToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
+func (p *Parser) currPrecedence() int {
+	if p, ok := precedences[p.currToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
 func (p *Parser) putPrefix(tok token.TokenType, pre PrefixParseFunc) {
 	p.prefixParseFuncs[tok] = pre
 	// exp := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
@@ -37,7 +73,6 @@ func (p *Parser) putPrefix(tok token.TokenType, pre PrefixParseFunc) {
 }
 
 func (p *Parser) putInfix(tok token.TokenType, in InfixParseFunc) {
-
 	p.infixParseFuncs[tok] = in
 }
 
@@ -56,24 +91,57 @@ func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
 }
 
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	// Result should be an integerLiteral() expression
+	yeah := &ast.PrefixExpression{Token: p.currToken, Operator: p.currToken.Literal}
+	// p.nextToken()
+	p.nextToken()
+	result := p.parseExpression(PREFIX)
+	yeah.Right = result
+	// this yeah needs to be smt := &ast.ExpressionStatement{Expreseeion: yeah}
+
+	return yeah
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	// Left wont always be a number, can be any expression, so any of the CONSTS
+	// 5 + 10
+	yeah := &ast.InfixExpression{Token: p.currToken, Operator: p.currToken.Literal, Left: left}
+	curr := p.currPrecedence() // of 5
+	p.nextToken()
+	// curr = +, peek = 10
+
+	result := p.parseExpression(curr) // the input should be the precedance of left
+	yeah.Right = result
+	// peek := p.peekPrecedence()
+	// right := p.parseExpression(peek)
+
+	return yeah
+
+}
+
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 	p.prefixParseFuncs = make(map[token.TokenType]PrefixParseFunc)
 	p.nextToken()
 	p.nextToken()
 
-	// p.putPrefix(token.IDENT, p.parseIdentifier)
+	p.putPrefix(token.IDENT, p.parseIdentifier)
+
 	p.putPrefix(token.INT, p.parseIntegerLiteral)
+	p.putPrefix(token.NOT, p.parsePrefixExpression) // can be ! or - or +
+	p.putPrefix(token.MINUS, p.parsePrefixExpression)
 
-	// "5; " p.currToken = 5, p.peektoken = ;
+	p.infixParseFuncs = make(map[token.TokenType]InfixParseFunc)
 
-	// switch p.currToken.Type{
-	// 	case token.IDENT:
-	// 		p.putPrefix(token.IDENT, p.parseIdentifier),
-	//     case token.INT:
-	// 		p.putPrefix(token.INT, p.parseIdentifier),
-
-	// }
+	p.putInfix(token.PLUS, p.parseInfixExpression)
+	p.putInfix(token.MINUS, p.parseInfixExpression)
+	p.putInfix(token.MULTIPLY, p.parseInfixExpression)
+	p.putInfix(token.DIVIDE, p.parseInfixExpression)
+	p.putInfix(token.LESSER, p.parseInfixExpression)
+	p.putInfix(token.GREATER, p.parseInfixExpression)
+	p.putInfix(token.NOT_EQ, p.parseInfixExpression)
+	p.putInfix(token.EQ, p.parseInfixExpression)
 
 	return p
 }
@@ -113,7 +181,9 @@ func (p *Parser) parseStatement() ast.Statement {
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.currToken}
-	stmt.Expression = p.parseExpression(LOWEST)
+
+	stmt.Expression = p.parseExpression(LOWEST) // this needs to be PrefixExpression
+	// needs to be followed by an IntegerLiteral
 
 	if p.expectedPeek(token.SEMICOLON) {
 		p.nextToken()
@@ -123,13 +193,22 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	// curr = +
 	prefix := p.prefixParseFuncs[p.currToken.Type]
 	if prefix == nil {
 		return nil
 	}
 
-	// leftExp := prefix()  // this was needed when it was a function. but we have changed that
-	return prefix()
+	leftExp := prefix() // this was needed when it was a function. but we have changed that
+	for !p.expectedPeek(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFuncs[p.peekToken.Type]
+		if infix == nil {
+			return leftExp
+		}
+		p.nextToken()
+		leftExp = infix(leftExp)
+	}
+	return leftExp
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
@@ -187,14 +266,3 @@ func (p *Parser) expectedPeek(t token.TokenType) bool {
 		return false
 	}
 }
-
-const (
-	_ int = iota // increments, skips 0 for prioroty of an expression
-	LOWEST
-	EQUALS      // ==
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-)

@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"mooshy/token"
+	"strconv"
 )
 
 type Node interface {
@@ -106,7 +107,13 @@ type IntegerLiteral struct {
 
 func (il *IntegerLiteral) ExpressionNode() {}
 func (il *IntegerLiteral) String() string {
-	return il.Token.Literal
+
+	var output bytes.Buffer
+	// convert int64 to string
+	x := strconv.FormatInt(il.Value, 10)
+
+	output.WriteString(x)
+	return output.String()
 
 }
 
@@ -114,7 +121,12 @@ func (il *IntegerLiteral) TokenLiteral() string {
 	return il.Token.Literal
 }
 func (id *Identifier) String() string {
-	return id.Value
+	var output bytes.Buffer
+	// convert int64 to string
+
+	output.WriteString(id.Value)
+	return output.String()
+
 }
 
 func (i *Identifier) TokenLiteral() string {
@@ -153,6 +165,47 @@ type ExpressionStatement struct {
 }
 
 // func (ex *ExpressionStatement.Expression) ExpressionNode() {}
+type PrefixExpression struct {
+	// "!5"
+	Token    token.Token // !
+	Operator string      // "!"
+	Right    Expression  // expresseion to the right of the sign, 5
+}
+
+type InfixExpression struct {
+	Token    token.Token
+	Operator string
+	Left     Expression
+	Right    Expression
+}
+
+func (in *InfixExpression) String() string {
+	var output bytes.Buffer
+	// convert int64 to string
+	// x := strconv.FormatInt(in.Value, 10)
+
+	output.WriteString("(" + in.Left.String() + in.Operator + in.Right.String() + ")")
+	return output.String()
+
+}
+
+func (in *InfixExpression) TokenLiteral() string {
+	return in.Token.Literal
+}
+
+func (in *InfixExpression) ExpressionNode() {}
+func (pe *PrefixExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("(" + pe.Operator + pe.Right.String() + ")")
+	return output.String()
+
+}
+func (pe *PrefixExpression) TokenLiteral() string {
+	return pe.Token.Literal
+}
+
+func (pe *PrefixExpression) ExpressionNode() {}
 
 func (ex *ExpressionStatement) TokenLiteral() string {
 	return ex.Token.Literal

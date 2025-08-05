@@ -147,3 +147,194 @@ func TestExpression(t *testing.T) {
 	}
 
 }
+
+func TestPrefix(t *testing.T) {
+	// input := `
+	// !5;
+	// -10;
+	// `
+	tests := []struct {
+		input    string
+		operator string
+		value    int64
+	}{
+		{"!5", "!", 5},
+		{"-10", "-", 10},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		if len(program.Statements) != 1 {
+			t.Errorf("program.Statements has wrong len. input=%q", tt.input)
+			return
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("stmt not ExpressionStatement. got %T", stmt)
+			return
+		}
+
+		st, ok := stmt.Expression.(*ast.PrefixExpression)
+		// PrefixExpression needs to have field Operator of type string and Right of type Expression wh ich is of integerLiteral, Expression
+		if !ok {
+			t.Errorf("stmt not PrefixExpression. got %T", stmt)
+			return
+		}
+
+		if st.Operator != tt.operator {
+			t.Errorf("stmt.Operator not %s. got %s", tt.operator, st.Operator)
+			return
+		}
+
+		if !testIntegerLiteral(t, st.Right, tt.value) {
+			return
+		}
+
+	}
+}
+
+func TestInfix(t *testing.T) {
+	tests := []struct {
+		input    string
+		left     int64
+		right    int64
+		operator string
+	}{ // have to do this with strings too, str1+str2 so Idetifier
+		{"5 +10", 5, 10, "+"},
+		{"7- 9", 7, 9, "-"},
+		{"2* 8", 2, 8, "*"},
+		{"10/ 5", 10, 5, "/"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		program := p.ParseProgram()
+
+		if len(program.Statements) != 1 {
+			t.Errorf("program.Statements has wrong len. input=%q", tt.input)
+			return
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+		if !ok {
+			t.Errorf("program.Statements[0] not ExpressionStatement. got %T", program.Statements)
+			return
+		}
+
+		infx, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Errorf("stmt not InfixExpression. got %T", stmt)
+			return
+		}
+
+		if infx.Operator != tt.operator {
+			t.Errorf("stmt.Operator not %s. got %s", tt.operator, infx.Operator)
+			return
+		}
+
+		if !testIntegerLiteral(t, infx.Left, tt.left) {
+			return
+		}
+		if !testIntegerLiteral(t, infx.Right, tt.right) {
+			return
+		}
+
+	}
+}
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	intLit, ok := il.(*ast.IntegerLiteral)
+
+	if !ok {
+		t.Errorf("not IntegerLiteral. got %T", il)
+		return false
+	}
+
+	if intLit.Value != value {
+		t.Errorf("intLit.Value not as expectedValue. got %d, want %d", intLit.Value, value)
+		return false
+	}
+
+	// change int64 to string
+
+	return true
+
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"-a * b",
+			"((-a)*b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a + b + c",
+			"((a+b)+c)",
+		},
+		{
+			"a + b - c",
+			"((a+b)-c)",
+		},
+		{
+			"a * b * c",
+			"((a*b)*c)",
+		},
+		{
+			"a * b / c",
+			"((a*b)/c)",
+		},
+		{
+			"a + b / c",
+			"(a+(b/c))",
+		},
+		{
+			"a + b * c + d / e - f",
+			"(((a+(b*c))+(d/e))-f)",
+		},
+		// {
+		// 	"3 + 4; -5 * 5",
+		// 	"(3+4)((-5)*5)",
+		// },
+		{
+			"5 > 4 == 3 < 4",
+			"((5>4)==(3<4))",
+		},
+		{
+			"5 < 4 != 3 > 4",
+			"((5<4)!=(3>4))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3+(4*5))==((3*1)+(4*5)))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3+(4*5))==((3*1)+(4*5)))",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		// checkParserErrors(t, p)
+		actual := program.String()
+
+		if actual != tt.expected {
+			t.Errorf("expected=%q, got=%q", tt.expected, actual)
+		}
+	}
+}
