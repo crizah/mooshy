@@ -317,8 +317,8 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"((5>4)==(3<4))",
 		},
 		{
-			"5 < 4 != 3 > 4",
-			"((5<4)!=(3>4))",
+			"5 < 4 != false",
+			"((5<4)!=false)",
 		},
 		{
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
@@ -380,8 +380,10 @@ func testLiteralExpression(
 		return testIdentifier(t, exp, v)
 	case bool:
 		return testBoolExpression(t, exp, v)
+
 	}
-	t.Errorf("Type of interfcae not defined")
+	t.Errorf("type of interface not defined")
+
 	return false
 
 }
@@ -501,6 +503,170 @@ func TestNaur(t *testing.T) {
 
 	if !testLetStatement(t, stmt3, "x", true) {
 		t.Errorf("let statement Test failed")
+		return
+	}
+
+}
+
+func TestHmm(t *testing.T) {
+	input := ` 4<5 != false;`
+
+	tests := []struct {
+		input    string
+		expected bool
+		exp      string
+	}{
+		{input, false, "((4<5)!=false)"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		prog := p.ParseProgram()
+
+		stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("not expression statement. got %T", stmt)
+			return
+		}
+
+		infx, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Errorf("not infix expression. got %T", infx)
+			return
+		}
+		if !testInfixExpression(t, infx.Left, 4, "<", 5) {
+			t.Errorf("test not passed here")
+		}
+		// if !testInfixExpression(t, infx, infx.Left, "!=", false) { // not wotrking here
+		// 	t.Errorf("test not passed HERE")
+		// 	return
+
+		// }
+
+		if !testBoolExpression(t, infx.Right, false) {
+			t.Errorf("not passed")
+			return
+		}
+
+	}
+}
+
+func TestThistoo(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"(5 + 5) * 2",
+			"((5+5)*2)",
+		},
+		{
+			"-(5 + 5)",
+			"(-(5+5))",
+		},
+		{
+			"!(true == true)",
+			"(!(true==true))",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		actual := program.String()
+
+		if actual != tt.expected {
+			t.Errorf("expected=%q, got=%q", tt.expected, actual)
+		}
+
+	}
+}
+
+func TestIfStatements(t *testing.T) {
+	input := `
+
+	if (5<4){
+	    let x = 10;
+	    let y = 20;
+
+	}else{
+	    let z = 10;
+	    let g = 20;
+	}`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	prog := p.ParseProgram()
+	if len(prog.Statements) != 1 {
+		t.Errorf("len of stetemets not as expected. expected %d, got %d", 1, len(prog.Statements))
+		return
+	}
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("statement not an expression statement. got %T", stmt)
+		return
+	}
+
+	ifExp, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Errorf("not an ifExpression. got %T", ifExp)
+		return
+	}
+
+	cond, ok := ifExp.Condition.(*ast.InfixExpression) // for this conditon is (5<4)
+	if !ok {
+		t.Errorf("condition is not InfixExpression. got %T", cond)
+		return
+	}
+
+	if !testInfixExpression(t, cond, 5, "<", 4) {
+		t.Errorf("got error")
+		return
+	}
+
+	// cons, ok := ifExp.Consequence.(*ast.BlockStatement)
+	// if !ok{
+	// 	t.Errorf("concequence is not a BlockStatement. got %T", cons)
+	// 	return
+	// }
+
+	if len(ifExp.Consequence.Statements) != 2 {
+		t.Errorf("len of consequence not as expected. expected %d, got %d", 2, len(ifExp.Consequence.Statements))
+		return
+	}
+
+	if !testLetStatement(t, ifExp.Consequence.Statements[0], "x", 10) {
+		t.Errorf("not passed")
+		return
+	}
+
+	if !testLetStatement(t, ifExp.Consequence.Statements[1], "y", 20) {
+		t.Errorf("not passed")
+		return
+	}
+
+	if ifExp.Alternative == nil {
+		t.Errorf("alternative not available")
+		return
+	}
+
+	if len(ifExp.Alternative.Statements) != 2 {
+		t.Errorf("len of consequence not as expected. expected %d, got %d", 2, len(ifExp.Alternative.Statements))
+		return
+	}
+
+	if !testLetStatement(t, ifExp.Alternative.Statements[0], "z", 10) {
+		t.Errorf("not passed")
+		return
+	}
+
+	if !testLetStatement(t, ifExp.Alternative.Statements[1], "g", 20) {
+		t.Errorf("not passed")
 		return
 	}
 

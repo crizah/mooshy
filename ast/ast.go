@@ -165,6 +165,7 @@ type ExpressionStatement struct {
 }
 
 // func (ex *ExpressionStatement.Expression) ExpressionNode() {}
+
 type PrefixExpression struct {
 	// "!5"
 	Token    token.Token // !
@@ -232,4 +233,50 @@ func (ex *ExpressionStatement) String() string {
 		return ex.Expression.String()
 	}
 	return ""
+}
+
+type IfExpression struct {
+	// if *Condition* { *Consequence* } else { *Alternative* }
+	Token       token.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+type BlockStatement struct {
+	Token      token.Token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) String() string {
+	var output bytes.Buffer
+
+	for _, s := range bs.Statements {
+		output.WriteString(s.String())
+	}
+	return output.String()
+}
+
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+
+}
+func (bs *BlockStatement) StatementNode() {}
+
+func (ie *IfExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+func (ie *IfExpression) ExpressionNode() {}
+
+func (ie *IfExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("if " + ie.Condition.String() + "{ " + ie.Consequence.String() + " }")
+	if ie.Alternative != nil {
+		output.WriteString("else { " + ie.Alternative.String() + " }")
+	}
+
+	return output.String()
+
 }
