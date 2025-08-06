@@ -182,6 +182,37 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	return bstmt
 
 }
+
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	fl := &ast.FunctionLiteral{Token: p.currToken}
+	if !p.expectedPeek(token.LPAREN) {
+		return nil
+	}
+	var par []*ast.Identifier
+	p.nextToken()
+	for !p.curTokenIs(token.RPAREN) {
+
+		if p.curTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+		curr := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+		par = append(par, curr)
+		p.nextToken()
+
+	}
+
+	fl.Parameter = par
+
+	if !p.expectedPeek(token.LBRACE) {
+		return nil
+	}
+	// p.nextToken()
+
+	bs := p.parseBlockStatement()
+	fl.Body = bs
+
+	return fl
+}
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 	p.prefixParseFuncs = make(map[token.TokenType]PrefixParseFunc)
@@ -208,6 +239,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.putPrefix(token.LPAREN, p.parseGroupedExpression) // look at this
 	p.putPrefix(token.IF, p.parseIfExpression)
+	p.putPrefix(token.FUNC, p.parseFunctionLiteral)
 
 	return p
 }

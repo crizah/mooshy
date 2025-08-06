@@ -671,3 +671,96 @@ func TestIfStatements(t *testing.T) {
 	}
 
 }
+
+func TestFunctions(t *testing.T) {
+	input := `
+	func(x, y){
+	let z = 20;
+	return x; }`
+
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.ParseProgram()
+	// if prog.String() != input {
+	// 	t.Errorf("not as expected. expected %s. got %s", input, prog.String())
+	// 	return
+
+	// }
+	// expression statement and function literal
+
+	if len(prog.Statements) != 1 {
+		t.Errorf("len of statements worng. expected %d, got %d", 1, len(prog.Statements))
+		return
+	}
+
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("not an expression statement. got %T", stmt)
+		return
+	}
+
+	fexp, ok := stmt.Expression.(*ast.FunctionLiteral)
+	if !ok {
+		t.Errorf("not a function statement. got %T", fexp)
+		return
+	}
+
+	if len(fexp.Parameter) != 2 {
+		t.Errorf("len of parameters is not 2. got %d", len(fexp.Parameter))
+		return
+
+	}
+	if !testIdentifier(t, fexp.Parameter[0], "x") {
+		t.Errorf("naur")
+		return
+	}
+
+	if !testIdentifier(t, fexp.Parameter[1], "y") {
+		t.Errorf("did not pass")
+		return
+	}
+
+	if len(fexp.Body.Statements) != 2 {
+		t.Errorf("number of ststemnets in block not 2. got %d", len(fexp.Body.Statements))
+		return
+	}
+
+	if !testLetStatement(t, fexp.Body.Statements[0], "z", 20) {
+		t.Errorf("did not pass")
+		return
+	}
+
+	if !testReturnStatement(t, fexp.Body.Statements[1], "x") {
+		t.Errorf("didnt pass")
+		return
+	}
+
+}
+
+// func TestFunctionLiterals(t *testing.T){
+// 	input:= `
+// 	let add = func(x, y){
+// 	let z = 20;
+// 	return x+y+20; }`
+
+// 	l:= lexer.New(input)
+// 	p:= New(l)
+// 	prog := p.ParseProgram()
+
+// 	if len(prog.Statements)!=1{
+// 		t.Errorf("len of statements worng. expected %d, got %d", 1, len(prog.Statements))
+// 		return
+// 	}
+
+// 	stmt, ok := prog.Statements[0].(*ast.LetStatement)
+// 	if !ok {
+// 		t.Errorf("stmt not let statement. got %T", stmt)
+// 		return
+// 	}
+
+// 	// if !testLetStatement(t, stmt, "add", float32(3.5)){
+// 	// 	t.Errorf("test not passed")
+// 	// 	return
+// 	// }
+
+// }

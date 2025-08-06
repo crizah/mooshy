@@ -248,6 +248,33 @@ type BlockStatement struct {
 	Statements []Statement
 }
 
+type FunctionLiteral struct {
+	Token     token.Token
+	Parameter []*Identifier
+	Body      *BlockStatement
+}
+
+func (fl *FunctionLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+
+func (fl *FunctionLiteral) ExpressionNode() {}
+func (fl *FunctionLiteral) String() string {
+	// func(Parameter) { Body }
+	var output bytes.Buffer
+	output.WriteString("func ( ")
+	for i, id := range fl.Parameter {
+		if i == len(fl.Parameter)-1 {
+			output.WriteString(id.String() + " ){")
+		}
+		output.WriteString(id.String() + " , ")
+
+	}
+	output.WriteString(fl.Body.String() + " }")
+	return output.String()
+
+}
+
 func (bs *BlockStatement) String() string {
 	var output bytes.Buffer
 
