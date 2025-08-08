@@ -138,7 +138,8 @@ func (i *Identifier) ExpressionNode() {}
 
 type ReturnStatement struct {
 	Token token.Token
-	Value *Identifier //can be IDENT, STRING, INT, FUNC etc
+	Value *Identifier //// NEED TO BE ABLE TO RETURN AN INFIXeXPRESSION. nees to be expression
+	// Value *Expression
 }
 
 func (rt *ReturnStatement) TokenLiteral() string {
@@ -306,4 +307,31 @@ func (ie *IfExpression) String() string {
 
 	return output.String()
 
+}
+
+type CallExpression struct {
+	Token     token.Token
+	Function  Expression
+	Arguments []Expression
+}
+
+func (ce *CallExpression) String() string {
+	var output bytes.Buffer
+	output.WriteString(ce.Function.String() + "(")
+	for i, arg := range ce.Arguments {
+		if i == len(ce.Arguments)-1 {
+			output.WriteString(arg.String() + ")")
+		} else {
+			output.WriteString(arg.String() + ", ")
+
+		}
+	}
+
+	return output.String()
+
+}
+
+func (ce *CallExpression) ExpressionNode() {}
+func (ce *CallExpression) TokenLiteral() string {
+	return ce.Token.Literal
 }

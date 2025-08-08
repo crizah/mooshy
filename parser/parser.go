@@ -27,6 +27,7 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.DIVIDE:   PRODUCT,
 	token.MULTIPLY: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 type Parser struct {
@@ -213,6 +214,37 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 
 	return fl
 }
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	s := &ast.CallExpression{Token: p.currToken, Function: function}
+	s.Arguments = p.parseArguments()
+	return s
+}
+
+func (p *Parser) parseArguments() []ast.Expression {
+	args := []ast.Expression{}
+	// add(x, y, x)
+	p.nextToken()
+	if p.curTokenIs(token.RPAREN) { // add() curr = )
+		p.nextToken() // EOF
+		return args
+	}
+
+	args = append(args, p.parseExpression(LOWEST)) // currToken is x
+	p.nextToken()
+
+	for !p.curTokenIs(token.RPAREN) {
+		if p.curTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+		args = append(args, p.parseExpression(LOWEST))
+		p.nextToken()
+	}
+
+	return args
+
+}
+
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 	p.prefixParseFuncs = make(map[token.TokenType]PrefixParseFunc)
@@ -240,6 +272,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.putPrefix(token.LPAREN, p.parseGroupedExpression) // look at this
 	p.putPrefix(token.IF, p.parseIfExpression)
 	p.putPrefix(token.FUNC, p.parseFunctionLiteral)
+
+	p.putInfix(token.LPAREN, p.parseCallExpression) // in add(x,y), ( is at the infix position, after pasing the function
+	// p.putPrefix(token.RETURN, p.parseReturn)
 
 	return p
 }
@@ -340,10 +375,13 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	// currently only works for return x;
-	stmt := &ast.ReturnStatement{Token: p.currToken} // can be IDENT, STRING, FUNC
+	stmt := &ast.ReturnStatement{Token: p.currToken}
+
 	if p.peekToken.Type != token.SEMICOLON && p.peekToken.Type != token.RBRACE {
 		p.nextToken()
 	}
+
+	// stmt.Value = p.parseExpression(LOWEST)
 
 	stmt.Value = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
 	if !p.expectedPeek(token.SEMICOLON) {

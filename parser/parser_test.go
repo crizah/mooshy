@@ -101,6 +101,12 @@ func testReturnStatement(t *testing.T, st ast.Statement, exName string) bool {
 		t.Errorf("retStmt.TokenLiteral not 'return'. got=%q", retStmt.TokenLiteral())
 		return false
 	}
+
+	// if !testLiteralExpression(t, retStmt.Value, exName) {
+	// 	t.Errorf("did not pass")
+	// 	return false
+	// }
+
 	if retStmt.Value.Value != exName {
 		t.Errorf("retStmt.Value.Value not '%s'. got=%s", exName, retStmt.Value.Value)
 		return false
@@ -330,6 +336,19 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		},
 		{"- 1 + 2",
 			"((-1)+2)"},
+
+		{
+			"a + add(b * c) + d",
+			"((a+add((b*c)))+d)",
+		},
+		{
+			"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			"add(a, b, 1, (2*3), (4+5), add(6, (7*8)))",
+		},
+		{
+			"add(a + b + c * d / f + g)",
+			"add((((a+b)+((c*d)/f))+g))",
+		},
 	}
 
 	for _, tt := range tests {
@@ -722,6 +741,7 @@ func TestFunctions(t *testing.T) {
 
 	if len(fexp.Body.Statements) != 2 {
 		t.Errorf("number of ststemnets in block not 2. got %d", len(fexp.Body.Statements))
+		// t.Errorf("statements are %T, %T, %T, %T", fexp.Body.Statements[0], fexp.Body.Statements[1], fexp.Body.Statements[2], fexp.Body.Statements[3])
 		return
 	}
 
@@ -730,6 +750,23 @@ func TestFunctions(t *testing.T) {
 		return
 	}
 
+	rtstmt, ok := fexp.Body.Statements[1].(*ast.ReturnStatement)
+	if !ok {
+		t.Errorf("not a return statement. got %T", rtstmt)
+		return
+	}
+
+	// val, ok := rtstmt.Value.(*ast.InfixExpression)
+	// if !ok {
+	// 	t.Errorf("not an infix expression. got %T", val)
+	// 	return
+	// }
+
+	// if val.String() != "x + y + z" {
+	// 	t.Errorf("did not pass. got %s, expected %s", val.String(), "x + y + z")
+	// 	return
+	// }
+
 	if !testReturnStatement(t, fexp.Body.Statements[1], "x") {
 		t.Errorf("didnt pass")
 		return
@@ -737,30 +774,65 @@ func TestFunctions(t *testing.T) {
 
 }
 
-// func TestFunctionLiterals(t *testing.T){
-// 	input:= `
-// 	let add = func(x, y){
-// 	let z = 20;
-// 	return x+y+20; }`
+func TestCallExpression(t *testing.T) {
+	input := `
+	add(x+y, c+d, 7);`
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.ParseProgram()
 
-// 	l:= lexer.New(input)
-// 	p:= New(l)
-// 	prog := p.ParseProgram()
+	if len(prog.Statements) != 1 {
+		t.Errorf("len not 1. got %d", len(prog.Statements))
 
-// 	if len(prog.Statements)!=1{
-// 		t.Errorf("len of statements worng. expected %d, got %d", 1, len(prog.Statements))
-// 		return
-// 	}
+	}
 
-// 	stmt, ok := prog.Statements[0].(*ast.LetStatement)
-// 	if !ok {
-// 		t.Errorf("stmt not let statement. got %T", stmt)
-// 		return
-// 	}
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("not expresion statement. got %T", stmt)
 
-// 	// if !testLetStatement(t, stmt, "add", float32(3.5)){
-// 	// 	t.Errorf("test not passed")
-// 	// 	return
-// 	// }
+	}
 
-// }
+	callEXp, ok := stmt.Expression.(*ast.CallExpression)
+	if !ok {
+		t.Errorf("not call expression. got %T", stmt.Expression)
+
+	}
+
+	if !testIdentifier(t, callEXp.Function, "add") {
+		t.Errorf("didnt pass")
+		return
+
+	}
+
+	if len(callEXp.Arguments) != 3 {
+		t.Errorf("len not 3. got %d", len(callEXp.Arguments))
+
+	}
+
+	a, ok := callEXp.Arguments[0].(*ast.InfixExpression)
+	if !ok {
+		t.Errorf("not an infix expression. got %T", a)
+		return
+	}
+
+	b, ok := callEXp.Arguments[1].(*ast.InfixExpression)
+	if !ok {
+		t.Errorf("not an infix expression. got %T", b)
+		return
+	}
+
+	if !testInfixExpression(t, a, "x", "+", "y") {
+		t.Errorf("didnt pass")
+		return
+	}
+
+	if !testInfixExpression(t, b, "c", "+", "d") {
+		t.Errorf("didnt pass")
+		return
+	}
+
+	if !testIntegerLiteral(t, callEXp.Arguments[2], int64(7)) {
+		t.Errorf("didnt pass")
+		return
+	}
+}
