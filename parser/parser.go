@@ -36,6 +36,7 @@ type Parser struct {
 	peekToken        token.Token
 	prefixParseFuncs map[token.TokenType]PrefixParseFunc
 	infixParseFuncs  map[token.TokenType]InfixParseFunc
+	Errors           []string
 }
 
 type (
@@ -130,6 +131,8 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 	exp := p.parseExpression(LOWEST)
 	if !p.expectedPeek(token.RPAREN) {
+		e := "Expected closing parenthesis"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 	return exp
@@ -138,6 +141,8 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 func (p *Parser) parseIfExpression() ast.Expression {
 	result := &ast.IfExpression{Token: p.currToken}
 	if !p.expectedPeek(token.LPAREN) {
+		e := "Expected opening parenthesis"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 
@@ -145,10 +150,14 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	condition := p.parseExpression(LOWEST)
 	result.Condition = condition
 	if !p.expectedPeek(token.RPAREN) {
+		e := "Expected closing parenthesis"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 
 	if !p.expectedPeek(token.LBRACE) {
+		e := "Expected opening bracket"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 
@@ -157,6 +166,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	p.nextToken()
 	if p.curTokenIs(token.ELSE) {
 		if !p.expectedPeek(token.LBRACE) {
+			e := "Expected opening bracket"
+			p.Errors = append(p.Errors, e)
 			return nil
 		}
 
@@ -187,6 +198,8 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fl := &ast.FunctionLiteral{Token: p.currToken}
 	if !p.expectedPeek(token.LPAREN) {
+		e := "Expected opening parenthesis"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 	var par []*ast.Identifier
@@ -205,6 +218,8 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fl.Parameter = par
 
 	if !p.expectedPeek(token.LBRACE) {
+		e := "Expected opening brace"
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 	// p.nextToken()
@@ -330,6 +345,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFuncs[p.currToken.Type] // so u cant do type1 * type2. both need to be same time
 	// prefix is -a in -a + b
 	if prefix == nil {
+		e := ("PrefixParseFuncs not available for" + p.currToken.Literal)
+		p.Errors = append(p.Errors, e)
+
 		return nil
 	}
 
@@ -351,43 +369,75 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	if !p.expectedPeek(token.IDENT) { // cheking for syntax. let should always be followd by an IDENT
 		// this also does nextToken()
+		e := ("expected IDENT")
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 
 	stmt.Name = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
 	if !p.expectedPeek(token.ASSIGN) { // should ALWAYS BE FOLLOWD BY AN =
+		e := ("expected ASSIGN")
+		p.Errors = append(p.Errors, e)
 		return nil
 	}
 
-	// TODO: We're skipping the expressions until we
-	// encounter a semicolon
-
-	// stmt.Value should be the return after the equal sign
 	p.nextToken()
 
 	stmt.Value = p.parseExpression(LOWEST) // this might not work
+	// p.nextToken()
+	// if !p.curTokenIs(token.SEMICOLON) {
+	// 	e := ("expected SEMICOLON")
+	// 	p.Errors = append(p.Errors, e)
+	// 	return nil
+	// }
 
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()
+		if p.curTokenIs(token.EOF) {
+			e := ("expected semicolon")
+			p.Errors = append(p.Errors, e)
+			return nil
+
+		}
 	}
 	return stmt
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	// currently only works for return x;
+
 	stmt := &ast.ReturnStatement{Token: p.currToken}
 
-	if p.peekToken.Type != token.SEMICOLON && p.peekToken.Type != token.RBRACE {
-		p.nextToken()
-	}
-
-	// stmt.Value = p.parseExpression(LOWEST)
-
-	stmt.Value = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
-	if !p.expectedPeek(token.SEMICOLON) {
-		return nil
-	}
+	// if p.peekToken.Type != token.SEMICOLON && p.peekToken.Type != token.RBRACE {
+	// 	p.nextToken()
+	// }
 	p.nextToken()
+	if p.curTokenIs(token.SEMICOLON) {
+		p.nextToken()
+		return stmt
+	}
+
+	stmt.Value = p.parseExpression(LOWEST)
+
+	// stmt.Value = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+	// p.nextToken()
+	for !p.curTokenIs(token.SEMICOLON) {
+
+		p.nextToken()
+		if p.curTokenIs(token.EOF) {
+			e := ("expected semicolon")
+			p.Errors = append(p.Errors, e)
+			return nil
+		}
+	}
+	// p.nextToken()
+
+	// p.nextToken()
+
+	// if !p.curTokenIs(token.SEMICOLON) {
+	// 	e := ("expected SEMICOLON")
+	// 	p.Errors = append(p.Errors, e)
+	// 	return nil
+	// }
 	return stmt
 
 }

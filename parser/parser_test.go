@@ -107,8 +107,8 @@ func testReturnStatement(t *testing.T, st ast.Statement, exName string) bool {
 	// 	return false
 	// }
 
-	if retStmt.Value.Value != exName {
-		t.Errorf("retStmt.Value.Value not '%s'. got=%s", exName, retStmt.Value.Value)
+	if retStmt.Value.String() != exName {
+		t.Errorf("retStmt.Value.Value not '%s'. got=%s", exName, retStmt.Value.String())
 		return false
 	}
 	return true
@@ -695,7 +695,7 @@ func TestFunctions(t *testing.T) {
 	input := `
 	func(x, y){
 	let z = 20;
-	return x; }`
+	return x+y; }`
 
 	l := lexer.New(input)
 	p := New(l)
@@ -756,18 +756,7 @@ func TestFunctions(t *testing.T) {
 		return
 	}
 
-	// val, ok := rtstmt.Value.(*ast.InfixExpression)
-	// if !ok {
-	// 	t.Errorf("not an infix expression. got %T", val)
-	// 	return
-	// }
-
-	// if val.String() != "x + y + z" {
-	// 	t.Errorf("did not pass. got %s, expected %s", val.String(), "x + y + z")
-	// 	return
-	// }
-
-	if !testReturnStatement(t, fexp.Body.Statements[1], "x") {
+	if !testReturnStatement(t, rtstmt, "(x+y)") {
 		t.Errorf("didnt pass")
 		return
 	}

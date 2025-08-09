@@ -138,7 +138,7 @@ func (i *Identifier) ExpressionNode() {}
 
 type ReturnStatement struct {
 	Token token.Token
-	Value *Identifier //// NEED TO BE ABLE TO RETURN AN INFIXeXPRESSION. nees to be expression
+	Value Expression //// NEED TO BE ABLE TO RETURN AN INFIXeXPRESSION. nees to be expression
 	// Value *Expression
 }
 
@@ -152,7 +152,7 @@ func (rs *ReturnStatement) String() string {
 	// return x;
 	output.WriteString(rs.TokenLiteral() + " ")
 	if rs.Value != nil {
-		output.WriteString(rs.Value.Value)
+		output.WriteString(rs.Value.String())
 
 	}
 	output.WriteString(";")
