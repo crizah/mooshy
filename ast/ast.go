@@ -104,7 +104,21 @@ type IntegerLiteral struct {
 	Token token.Token
 	Value int64
 }
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
 
+func (sl *StringLiteral) ExpressionNode() {}
+func (sl *StringLiteral) String() string {
+	var output bytes.Buffer
+	output.WriteString(`"` + sl.Value + `"`)
+	return output.String()
+}
+
+func (sl *StringLiteral) TokenLiteral() string {
+	return sl.Token.Literal
+}
 func (il *IntegerLiteral) ExpressionNode() {}
 func (il *IntegerLiteral) String() string {
 

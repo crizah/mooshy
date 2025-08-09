@@ -51,6 +51,8 @@ type (
 
 // }
 
+// NEED TO IMPLEMENT STRING AS A LITERAL yeah done
+
 func (p *Parser) peekPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
@@ -85,6 +87,12 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 		panic(err)
 	}
 	return &ast.IntegerLiteral{Token: p.currToken, Value: val}
+}
+
+func (p *Parser) parseStringLiteral() ast.Expression {
+	s := &ast.StringLiteral{Token: p.currToken}
+	s.Value = p.currToken.Literal
+	return s
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
@@ -268,6 +276,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	p.putPrefix(token.IDENT, p.parseIdentifier)
+	p.putPrefix(token.STRING, p.parseStringLiteral)
 
 	p.putPrefix(token.INT, p.parseIntegerLiteral) // THIS IS NOT CALLING THE FUNCTION. ITRS JUST UK MENTIONING IT
 	p.putPrefix(token.NOT, p.parsePrefixExpression)

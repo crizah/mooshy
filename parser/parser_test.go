@@ -694,7 +694,7 @@ func TestIfStatements(t *testing.T) {
 func TestFunctions(t *testing.T) {
 	input := `
 	func(x, y){
-	let z = 20;
+	let z = "meow";
 	return x+y; }`
 
 	l := lexer.New(input)
@@ -745,10 +745,34 @@ func TestFunctions(t *testing.T) {
 		return
 	}
 
-	if !testLetStatement(t, fexp.Body.Statements[0], "z", 20) {
-		t.Errorf("did not pass")
+	// testing the let statment
+
+	letStmt, ok := fexp.Body.Statements[0].(*ast.LetStatement)
+	if !ok {
+		t.Errorf("not a let statement. got %T", letStmt)
 		return
 	}
+
+	if letStmt.Name.String() != "z" {
+		t.Errorf("name of let statement is not z. got %s", letStmt.Name.String())
+		return
+	}
+
+	str, ok := letStmt.Value.(*ast.StringLiteral)
+	if !ok {
+		t.Errorf("not a string literal. got %T", str)
+		return
+	}
+
+	if str.Value != "meow" {
+		t.Errorf("value of string literal is not meow. got %s", str.Value)
+		return
+	}
+
+	// if !testLetStatement(t, fexp.Body.Statements[0], "z", 20) {
+	// 	t.Errorf("did not pass")
+	// 	return
+	// }
 
 	rtstmt, ok := fexp.Body.Statements[1].(*ast.ReturnStatement)
 	if !ok {
