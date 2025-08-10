@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"mooshy/evaluator"
 	"mooshy/lexer"
 	"mooshy/parser"
 )
@@ -74,8 +75,8 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, prog.String())
-		io.WriteString(out, "\n")
+		// io.WriteString(out, prog.String())
+		// io.WriteString(out, "\n")
 
 		// for {
 		// 	tok := l.NextToken()
@@ -84,6 +85,12 @@ func Start(in io.Reader, out io.Writer) {
 		// 	}
 		// 	fmt.Printf("Type: %s, Literal: %s\n", tok.Type, tok.Literal)
 		// }
+
+		evaluated := evaluator.Eval(prog)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
