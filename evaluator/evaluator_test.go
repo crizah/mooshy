@@ -277,3 +277,60 @@ func TestReturn(t *testing.T) {
 
 	}
 }
+
+func TestStringObject(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"meow"`, "meow"},
+	}
+
+	for _, tt := range tests {
+		evalauted := testEval(t, tt.input)
+		testStringObjects(t, evalauted, tt.expected)
+	}
+}
+
+func testStringObjects(t *testing.T, obj object.Object, expected string) bool {
+	str, ok := obj.(*object.String)
+	if !ok {
+		t.Errorf("object is not String. got=%T", obj)
+		return false
+	}
+
+	if str.Value != expected {
+		t.Errorf("not as expected. expected %s. got %s", expected, str.Value)
+		return false
+	}
+
+	return true
+}
+
+// func TestLetStatements(t *testing.T) {
+// 	tests := []struct {
+// 		input    string
+// 		expected interface{}
+// 	}{
+// 		{"let x = 10; x;", 10},
+// 		{"let a = false; a;", false},
+// 		{"let b = 2 * 5; b;", 10},
+// 		{"let x = 10>1; x;", true},
+// 		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+// 		{"let a = 5; let b = a; b;", 5},
+// 	}
+
+// 	for _, tt := range tests {
+// 		evaluated := testEval(t, tt.input)
+// 		val, ok := tt.expected.(int)
+// 		if ok {
+// 			testIntegerObject(t, evaluated, int64(val))
+// 		} else {
+// 			b, ok := tt.expected.(bool)
+// 			if ok {
+// 				testBooleanObject(t, evaluated, b)
+// 			}
+// 		}
+
+// 	}
+// }

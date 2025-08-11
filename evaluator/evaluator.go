@@ -162,7 +162,52 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 			return &object.Error{Msg: "Cant perform " + operator + " on Bool objects"}
 		}
 
+	} else if right.Type() == object.STRING_OBJ && left.Type() == object.STRING_OBJ {
+		r, ok := right.(*object.String)
+		if !ok {
+			return &object.Error{Msg: "Not String Object"}
+
+			// return NULL
+		}
+
+		l, ok := left.(*object.String)
+		if !ok {
+			return &object.Error{Msg: "Not String Object"}
+			// return NULL
+		}
+		switch operator {
+		case "+":
+			return &object.String{Value: l.Value + r.Value}
+		// case "-":
+		// 	return &object.Error{Msg: "Can't subtract string values"}
+		// case "*":
+		// 	return &object.Error{Msg: "Cant multiply string values"}
+		// case "/":
+		// 	return &object.Error{Msg: "Cant divide string values"}
+		// 	////////////
+		// case "<":
+
+		// 	return
+		// case ">":
+		// 	if l.Value > r.Value {
+		// 		return TRUE
+		// 	}
+		// 	return FALSE
+		case "==":
+			if l.Value == r.Value {
+				return TRUE
+			}
+			return FALSE
+		case "!=":
+			if l.Value != r.Value {
+				return TRUE
+			}
+			return FALSE
+		default:
+			return &object.Error{Msg: "Cant perform " + operator + " on String objects"}
+		}
 	}
+	// return NULL
 
 	return &object.Error{Msg: "Unrecogniused Object Type"}
 
@@ -209,11 +254,14 @@ func Eval(node ast.Node) object.Object {
 		return helper(node.Value) // so that we dont have to make a new instance everytime
 		// return &object.Bool{Value: node.Value}
 
-	// case *ast.StringLiteral:
-	// 	return &object.String{Value: node.Value}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	case *ast.BlockStatement:
 		return evalBlockStatements(node)
 		// return evalStatements(node.Statements)
+	// case *ast.LetStatement:
+	// 	val := Eval(node.Value)
+
 	case *ast.IfExpression:
 		return evalIfExpressions(node)
 	case *ast.ReturnStatement:
@@ -235,7 +283,7 @@ func Eval(node ast.Node) object.Object {
 
 	}
 
-	return nil
+	return NULL
 }
 
 func evalBlockStatements(bstmt *ast.BlockStatement) object.Object {
