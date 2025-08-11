@@ -1,5 +1,7 @@
 package evaluator
 
+// ERROR HANDELING NEED TO BE FIXED
+
 import (
 	"mooshy/ast"
 	"mooshy/object"
@@ -25,7 +27,8 @@ func evalNotOp(right object.Object) object.Object {
 func evalMinusOp(right object.Object) object.Object {
 	i, ok := right.(*object.Integer)
 	if !ok {
-		return NULL
+		return &object.Error{Msg: "not integer object"}
+		// return NULL
 	}
 	return &object.Integer{Value: -i.Value}
 
@@ -38,7 +41,8 @@ func evaluateOp(right object.Object, operator string) object.Object {
 	case "-":
 		return evalMinusOp(right)
 	default:
-		return NULL
+		return &object.Error{Msg: "not a prefix operator. got :" + operator + ". ! and - supported."}
+		// return NULL
 
 	}
 
@@ -65,7 +69,8 @@ func evalInfix(r object.Object, l object.Object, operator string) object.Object 
 		return evalInfixOp(l, r, operator)
 
 	default:
-		return NULL
+		return &object.Error{Msg: "unknown operator: " + operator}
+		// return NULL
 	}
 
 }
@@ -76,17 +81,24 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 	// both left and right dont NEED rto be integres. can be of string type and return will be concacted string.
 	// but for now, keep them both as only integers allowed
 
+	if right.Type() != left.Type() {
+		return &object.Error{Msg: "Type mismatch: " + right.Inspect() + " and " + left.Inspect()}
+	}
+
 	if right.Type() == object.INTEGER_OBJ && left.Type() == object.INTEGER_OBJ {
 		// also do if of differetent object types and == and != operators instead of null
 
 		r, ok := right.(*object.Integer)
 		if !ok {
-			return NULL
+			return &object.Error{Msg: "Not Integer Object"}
+
+			// return NULL
 		}
 
 		l, ok := left.(*object.Integer)
 		if !ok {
-			return NULL
+			return &object.Error{Msg: "Not Integer Object"}
+			// return NULL
 		}
 		switch operator {
 		case "+":
@@ -119,18 +131,21 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 			}
 			return FALSE
 		default:
-			return NULL
+			return &object.Error{Msg: "Unknown operator: " + operator}
+			// return NULL
 		}
 	} else if right.Type() == object.BOOL_OBJ && left.Type() == object.BOOL_OBJ {
 
 		r, ok := right.(*object.Bool)
 		if !ok {
-			return NULL
+			return &object.Error{Msg: "Not Bool Object"}
+			// return NULL
 		}
 
 		l, ok := left.(*object.Bool)
 		if !ok {
-			return NULL
+			return &object.Error{Msg: "Not Bool Object"}
+			// return NULL
 		}
 		switch operator {
 		case "==":
@@ -143,14 +158,49 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 				return TRUE
 			}
 			return FALSE
+		default:
+			return &object.Error{Msg: "Cant perform " + operator + " on Bool objects"}
 		}
 
 	}
 
-	return NULL
+	return &object.Error{Msg: "Unrecogniused Object Type"}
+
+	// return NULL
 
 }
 
+func evalIfExpressions(ie *ast.IfExpression) object.Object {
+	// 	if (x) {
+	// puts("everything okay!");
+	// } else {
+	// puts("x is too high!");
+	// shutdownSystem();
+	// }
+
+	condition := Eval(ie.Condition)
+	if isTrue(condition) {
+		return Eval(ie.Consequence)
+	} else {
+		if ie.Alternative != nil {
+			return Eval(ie.Alternative)
+		}
+		return NULL
+	}
+}
+
+func isTrue(condition object.Object) bool {
+	switch condition {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
@@ -161,6 +211,14 @@ func Eval(node ast.Node) object.Object {
 
 	// case *ast.StringLiteral:
 	// 	return &object.String{Value: node.Value}
+	case *ast.BlockStatement:
+		return evalBlockStatements(node)
+		// return evalStatements(node.Statements)
+	case *ast.IfExpression:
+		return evalIfExpressions(node)
+	case *ast.ReturnStatement:
+		val := Eval(node.Value)
+		return &object.Return{Value: val}
 	case *ast.PrefixExpression: // can be - or !
 		right := Eval(node.Right)
 		return evaluateOp(right, node.Operator)
@@ -169,13 +227,45 @@ func Eval(node ast.Node) object.Object {
 		left := Eval(node.Left)
 		return evalInfix(right, left, node.Operator)
 	case *ast.Program:
+		// return evalProgram(node)
 		return evalStatements(node.Statements)
+
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
 
 	}
 
 	return nil
+}
+
+func evalBlockStatements(bstmt *ast.BlockStatement) object.Object {
+	var result object.Object
+
+	for _, stmt := range bstmt.Statements {
+		result := Eval(stmt)
+
+		if result != nil && result.Type() == object.RETURN_OBJ {
+			return result
+		}
+		if result.Type() == object.ERROR_OBJ && result != nil {
+			return result
+		}
+	}
+	return result
+}
+
+func evalProgram(prog *ast.Program) object.Object {
+	var result object.Object
+	for _, stmt := range prog.Statements {
+		result := Eval(stmt)
+
+		if ret, ok := result.(*object.Return); ok {
+			return ret.Value
+		}
+
+	}
+
+	return result
 }
 
 func helper(input bool) object.Object {
@@ -190,6 +280,13 @@ func evalStatements(stmts []ast.Statement) object.Object {
 
 	for _, stmt := range stmts {
 		result = Eval(stmt)
+		if rt, ok := result.(*object.Return); ok {
+			return rt.Value
+		}
+
+		if result.Type() == object.ERROR_OBJ && result != nil {
+			return result
+		}
 	}
 
 	return result

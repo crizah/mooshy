@@ -12,7 +12,21 @@ const (
 	BOOL_OBJ    = "BOOL"
 	STRING_OBJ  = "STRING"
 	NULL_OBJ    = "NULL"
+	RETURN_OBJ  = "RETURN"
+	ERROR_OBJ   = "ERROR"
 )
+
+type Error struct {
+	Msg string
+}
+
+func (e *Error) Type() ObjectType {
+	return ERROR_OBJ
+}
+
+func (e *Error) Inspect() string {
+	return fmt.Sprintf("error: %s", e.Msg)
+}
 
 type Object interface {
 	Type() ObjectType
@@ -30,6 +44,18 @@ type String struct {
 	// this is not string. it should retunr Token.String. thats why not recoignied as StringObject yet
 	// "string"
 	Value string
+}
+
+type Return struct {
+	Value Object
+}
+
+func (r *Return) Type() ObjectType {
+	return RETURN_OBJ
+}
+
+func (r *Return) Inspect() string {
+	return fmt.Sprintf("RETURN %s", r.Value.Inspect())
 }
 
 type Null struct{}

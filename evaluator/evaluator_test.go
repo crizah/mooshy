@@ -186,3 +186,94 @@ func TestInfix(t *testing.T) {
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
+
+func TestFuncObjects(t *testing.T) {
+	// tests := []struct {
+	// 	input    string
+	// 	expected interface{}
+	// }{
+	// 	{"if (true) { 10 }", 10},
+	// 	{"if (false) { 10 }", nil},
+	// 	{"if (1) { 10 }", 10},
+	// 	{"if (1 < 2) { 10 }", 10},
+	// 	{"if (1 > 2) { 10 }", nil},
+	// 	{"if (1 > 2) { 10 } else { 20 }", 20},
+	// 	{"if (1 < 2) { 10 } else { 20 }", 10},
+	// }
+
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"if (true) { return 10; }", 10},
+		{"if (false) { return 10; }", nil},
+		{"if (1) { return 10; }", 10},
+		{"if (1 < 2) { return 10; }", 10},
+		{"if (1 > 2) {return 10;}", nil},
+		{"if (1 > 2) { return 10; } else { return 20; }", 20},
+		{"if (1 < 2) { return 10; } else { return 20;}", 10}, // needs to be followed by a return statement
+		{`if(10 > 1){ if(9 > 1) {
+		return 10; } return 1; }`, 10},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		i, ok := tt.expected.(int)
+
+		if ok {
+			testIntegerObject(t, evaluated, int64(i))
+		} else {
+			testNullObject(t, evaluated)
+		}
+
+	}
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NULL {
+		t.Errorf("not a null object got %T", obj)
+		return false
+
+	}
+
+	return true
+
+}
+
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"return 10;", 10},
+		{"return 10; 9;", 10},
+		{"return 2 * 5; 9;", 10}, // only return till the first ;
+		{"9; return 2 * 5; 9;", 10},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestReturn(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{{"return 98;", 98},
+		{"return false;", false},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		i, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(i))
+		}
+
+		b, ok := tt.expected.(bool)
+		if ok {
+			testBooleanObject(t, evaluated, b)
+		}
+
+	}
+}
