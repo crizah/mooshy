@@ -354,7 +354,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFuncs[p.currToken.Type] // so u cant do type1 * type2. both need to be same time
 	// prefix is -a in -a + b
 	if prefix == nil {
-		e := ("PrefixParseFuncs not available for" + p.currToken.Literal)
+		// e := ("PrefixParseFuncs not available for" + p.currToken.Literal)
+		e := ("Expected Semicolon")
 		p.Errors = append(p.Errors, e)
 
 		return nil

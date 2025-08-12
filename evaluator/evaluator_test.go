@@ -73,8 +73,9 @@ func testEval(t *testing.T, input string) object.Object {
 	p := parser.New(l)
 
 	prog := p.ParseProgram()
+	env := object.NewEnv()
 
-	return Eval(prog) // input ast.Node and return object.Object
+	return Eval(prog, env)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expectedValue int64) bool {
@@ -261,6 +262,7 @@ func TestReturn(t *testing.T) {
 		expected interface{}
 	}{{"return 98;", 98},
 		{"return false;", false},
+		{`return "meow";`, "meow"},
 	}
 
 	for _, tt := range tests {
@@ -273,6 +275,11 @@ func TestReturn(t *testing.T) {
 		b, ok := tt.expected.(bool)
 		if ok {
 			testBooleanObject(t, evaluated, b)
+		}
+
+		s, ok := tt.expected.(string)
+		if ok {
+			testStringObjects(t, evaluated, s)
 		}
 
 	}
@@ -307,30 +314,33 @@ func testStringObjects(t *testing.T, obj object.Object, expected string) bool {
 	return true
 }
 
-// func TestLetStatements(t *testing.T) {
-// 	tests := []struct {
-// 		input    string
-// 		expected interface{}
-// 	}{
-// 		{"let x = 10; x;", 10},
-// 		{"let a = false; a;", false},
-// 		{"let b = 2 * 5; b;", 10},
-// 		{"let x = 10>1; x;", true},
-// 		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
-// 		{"let a = 5; let b = a; b;", 5},
-// 	}
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"let x = 10; x;", 10},
+		{"let a = false; a;", false},
+		{"let b = 2 * 5; b;", 10},
+		{"let x = 10>1; x;", true},
+		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+		{"let a = 5; let b = a; b;", 5},
+		{`let a = "meow"; let b = "wwww"; let c = a + b + "!!"; c;`, "meowwwww!!"},
+	}
 
-// 	for _, tt := range tests {
-// 		evaluated := testEval(t, tt.input)
-// 		val, ok := tt.expected.(int)
-// 		if ok {
-// 			testIntegerObject(t, evaluated, int64(val))
-// 		} else {
-// 			b, ok := tt.expected.(bool)
-// 			if ok {
-// 				testBooleanObject(t, evaluated, b)
-// 			}
-// 		}
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		val, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(val))
+		} else {
+			b, ok := tt.expected.(bool)
+			if ok {
+				testBooleanObject(t, evaluated, b)
+			} else {
+				testStringObjects(t, evaluated, tt.expected.(string))
+			}
+		}
 
-// 	}
-// }
+	}
+}

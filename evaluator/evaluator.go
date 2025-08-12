@@ -178,21 +178,7 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 		switch operator {
 		case "+":
 			return &object.String{Value: l.Value + r.Value}
-		// case "-":
-		// 	return &object.Error{Msg: "Can't subtract string values"}
-		// case "*":
-		// 	return &object.Error{Msg: "Cant multiply string values"}
-		// case "/":
-		// 	return &object.Error{Msg: "Cant divide string values"}
-		// 	////////////
-		// case "<":
 
-		// 	return
-		// case ">":
-		// 	if l.Value > r.Value {
-		// 		return TRUE
-		// 	}
-		// 	return FALSE
 		case "==":
 			if l.Value == r.Value {
 				return TRUE
@@ -215,7 +201,7 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 
 }
 
-func evalIfExpressions(ie *ast.IfExpression) object.Object {
+func evalIfExpressions(ie *ast.IfExpression, env *object.Enviorment) object.Object {
 	// 	if (x) {
 	// puts("everything okay!");
 	// } else {
@@ -223,12 +209,12 @@ func evalIfExpressions(ie *ast.IfExpression) object.Object {
 	// shutdownSystem();
 	// }
 
-	condition := Eval(ie.Condition)
+	condition := Eval(ie.Condition, env)
 	if isTrue(condition) {
-		return Eval(ie.Consequence)
+		return Eval(ie.Consequence, env)
 	} else {
 		if ie.Alternative != nil {
-			return Eval(ie.Alternative)
+			return Eval(ie.Alternative, env)
 		}
 		return NULL
 	}
@@ -246,7 +232,7 @@ func isTrue(condition object.Object) bool {
 		return true
 	}
 }
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -257,40 +243,55 @@ func Eval(node ast.Node) object.Object {
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
 	case *ast.BlockStatement:
-		return evalBlockStatements(node)
+		return evalBlockStatements(node, env)
 		// return evalStatements(node.Statements)
-	// case *ast.LetStatement:
-	// 	val := Eval(node.Value)
+	case *ast.LetStatement: // THIS IS WHERE THE ISSUE IS
+		val := Eval(node.Value, env)
+		return env.Put(node.Name.Value, val)
+
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 
 	case *ast.IfExpression:
-		return evalIfExpressions(node)
+		return evalIfExpressions(node, env)
 	case *ast.ReturnStatement:
-		val := Eval(node.Value)
+		val := Eval(node.Value, env)
 		return &object.Return{Value: val}
 	case *ast.PrefixExpression: // can be - or !
-		right := Eval(node.Right)
+		right := Eval(node.Right, env)
 		return evaluateOp(right, node.Operator)
 	case *ast.InfixExpression:
-		right := Eval(node.Right)
-		left := Eval(node.Left)
+		right := Eval(node.Right, env)
+		left := Eval(node.Left, env)
 		return evalInfix(right, left, node.Operator)
 	case *ast.Program:
 		// return evalProgram(node)
-		return evalStatements(node.Statements)
+		return evalStatements(node.Statements, env)
 
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
 
 	}
 
 	return NULL
 }
 
-func evalBlockStatements(bstmt *ast.BlockStatement) object.Object {
+func evalIdentifier(
+	node *ast.Identifier,
+	env *object.Enviorment,
+) object.Object {
+	val, ok := env.Get(node.Value)
+	if !ok {
+		return &object.Error{Msg: "identifier not found: " + node.Value}
+	}
+	return val
+}
+
+func evalBlockStatements(bstmt *ast.BlockStatement, env *object.Enviorment) object.Object {
 	var result object.Object
 
 	for _, stmt := range bstmt.Statements {
-		result := Eval(stmt)
+		result := Eval(stmt, env)
 
 		if result != nil && result.Type() == object.RETURN_OBJ {
 			return result
@@ -302,10 +303,10 @@ func evalBlockStatements(bstmt *ast.BlockStatement) object.Object {
 	return result
 }
 
-func evalProgram(prog *ast.Program) object.Object {
+func evalProgram(prog *ast.Program, env *object.Enviorment) object.Object {
 	var result object.Object
 	for _, stmt := range prog.Statements {
-		result := Eval(stmt)
+		result := Eval(stmt, env)
 
 		if ret, ok := result.(*object.Return); ok {
 			return ret.Value
@@ -323,11 +324,11 @@ func helper(input bool) object.Object {
 	return FALSE
 }
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalStatements(stmts []ast.Statement, env *object.Enviorment) object.Object {
 	var result object.Object
 
 	for _, stmt := range stmts {
-		result = Eval(stmt)
+		result = Eval(stmt, env)
 		if rt, ok := result.(*object.Return); ok {
 			return rt.Value
 		}

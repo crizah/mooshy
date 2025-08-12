@@ -9,6 +9,7 @@ import (
 	"io"
 	"mooshy/evaluator"
 	"mooshy/lexer"
+	"mooshy/object"
 	"mooshy/parser"
 )
 
@@ -86,7 +87,9 @@ func Start(in io.Reader, out io.Writer) {
 		// 	fmt.Printf("Type: %s, Literal: %s\n", tok.Type, tok.Literal)
 		// }
 
-		evaluated := evaluator.Eval(prog)
+		env := object.NewEnv()
+
+		evaluated := evaluator.Eval(prog, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
