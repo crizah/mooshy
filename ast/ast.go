@@ -265,7 +265,7 @@ type BlockStatement struct {
 
 type FunctionLiteral struct {
 	Token     token.Token
-	Parameter []*Identifier
+	Parameter []*Identifier // mqyebe expressions?
 	Body      *BlockStatement
 }
 

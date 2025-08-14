@@ -1,7 +1,9 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
+	"mooshy/ast"
 	// "mooshy/token"
 )
 
@@ -14,6 +16,7 @@ const (
 	NULL_OBJ    = "NULL"
 	RETURN_OBJ  = "RETURN"
 	ERROR_OBJ   = "ERROR"
+	FUNC_OBJ    = "FUNCTION"
 )
 
 type Error struct {
@@ -44,6 +47,41 @@ type String struct {
 	// this is not string. it should retunr Token.String. thats why not recoignied as StringObject yet
 	// "string"
 	Value string
+}
+
+type Function struct {
+	Params []*ast.Identifier
+	Body   *ast.BlockStatement
+	Env    *Enviorment
+}
+
+func (f *Function) Inspect() string {
+	var output bytes.Buffer
+
+	// func(x){ }
+
+	output.WriteString("func(")
+	for i, p := range f.Params {
+		if i == len(f.Params)-1 {
+			output.WriteString(p.String() + "){")
+
+		} else {
+			output.WriteString(p.String() + ", ")
+		}
+	}
+
+	for _, s := range f.Body.Statements {
+		output.WriteString(s.String())
+	}
+
+	output.WriteString("}")
+	return output.String()
+
+}
+
+func (f *Function) Type() ObjectType {
+	return FUNC_OBJ
+
 }
 
 type Return struct {

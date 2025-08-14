@@ -249,6 +249,14 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 		val := Eval(node.Value, env)
 		return env.Put(node.Name.Value, val)
 
+	case *ast.FunctionLiteral:
+		return &object.Function{Params: node.Parameter, Body: node.Body, Env: env}
+	case *ast.CallExpression:
+
+		fun := Eval(node.Function, env)
+		args := evalArguments(node.Arguments, env)
+		return evalOuterFunc(fun, args)
+
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 
@@ -274,6 +282,48 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	}
 
 	return NULL
+}
+
+func evalOuterFunc(obj object.Object, args []object.Object) object.Object {
+	fn, ok := obj.(*object.Function)
+	if !ok {
+		return &object.Error{Msg: "Not a function object"}
+	}
+
+	extended := extendEnv(fn, args)
+	evaluated := Eval(fn.Body, extended)
+	return unwrapReturn(evaluated)
+
+}
+
+func unwrapReturn(obj object.Object) object.Object {
+	if ret, ok := obj.(*object.Return); ok {
+		return ret.Value
+	}
+	return obj
+
+}
+
+func extendEnv(fn *object.Function, args []object.Object) *object.Enviorment {
+	env := object.SetNewEnclosedEnv(fn.Env)
+
+	for i, p := range fn.Params {
+		env.Put(p.Value, args[i])
+	}
+
+	return env
+
+}
+
+func evalArguments(args []ast.Expression, env *object.Enviorment) []object.Object {
+	var result []object.Object
+	for _, e := range args {
+		x := Eval(e, env)
+		result = append(result, x)
+	}
+
+	return result
+
 }
 
 func evalIdentifier(

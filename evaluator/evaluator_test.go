@@ -344,3 +344,54 @@ func TestLetStatements(t *testing.T) {
 
 	}
 }
+
+func TestFunctions(t *testing.T) {
+	input := "func(x) { (x+2); }"
+	evaluated := testEval(t, input)
+	fn, ok := evaluated.(*object.Function)
+	if !ok {
+		t.Errorf("Not a function object. got %T", fn)
+		return
+
+	}
+
+	if len(fn.Params) != 1 {
+		t.Errorf("length of params not 1. got %d", len(fn.Params))
+		return
+
+	}
+
+	if fn.Params[0].Value != "x" {
+		t.Errorf("not as expected. expected %s. got %s", "x", fn.Params[0].Value)
+		return
+	}
+
+	if len(fn.Body.Statements) != 1 {
+		t.Errorf("length of body not 1. got %d", len(fn.Body.Statements))
+		return
+	}
+
+	if fn.Body.Statements[0].String() != "(x+2)" {
+		t.Errorf("not as expected. got %s", fn.Body.Statements[0].String())
+		return
+	}
+
+}
+
+func TestFunctionApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		// HAS TO HAVE A RETURN STATEMENT . NEEDS TO RETURN A VALUE
+
+		{"let identity = func(x) { return x; }; identity(5);", 5},
+		{"let double = func(x) { return (x * 2); }; double(5);", 10},
+		{"let add = func(x, y) { return (x + y); }; add(5, 5);", 10},
+		{"let add = func(x, y) { return (x + y); }; add(5 + 5, add(5, 5));", 20},
+		{"func(x) { return x; }(5)", 5}, // ???
+	}
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(t, tt.input), tt.expected)
+	}
+}

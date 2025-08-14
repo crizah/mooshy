@@ -58,5 +58,7 @@ func main() {
 	fmt.Printf("Hello %s! This is the Mooshy programming language!\n",
 		user.Username)
 	// fmt.Println("Feel free to type in commands")
+
 	repl.Start(os.Stdin, os.Stdout)
+
 }

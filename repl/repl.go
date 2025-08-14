@@ -15,6 +15,8 @@ import (
 
 const PROMT = ">> "
 
+// need to fix this
+
 const MEOW = `
 ⠀⠀⠀⠀⠀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⢀⣷⣀⢉⠒⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -60,13 +62,25 @@ const MEOW = `
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	for {
+
 		fmt.Printf(PROMT)
+
 		scanned := scanner.Scan() // read input from the user
 		if !scanned {
 			return
 		}
 
+		// var input string
+		// x := true
 		line := scanner.Text()
+
+		// for x {
+		// 	input = input + line
+		// 	if line == "end" {
+		// 		x = false
+		// 	}
+		// }
+
 		l := lexer.New(line)
 		p := parser.New(l)
 		prog := p.ParseProgram()
@@ -94,6 +108,7 @@ func Start(in io.Reader, out io.Writer) {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}
+
 	}
 }
 
