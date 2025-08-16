@@ -267,9 +267,21 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 		args := evalArguments(node.Arguments, env)
 		return evalOuterFunc(fun, args)
 
+	case *ast.IndexExpression:
+		arr := Eval(node.Name, env)
+		// needs to return object of the same typeas arrs first one. we will confirm only same type allowed
+		if ar_obj, ok := arr.(*object.Array); ok {
+			if node.Index >= int64(len(ar_obj.Value)) || node.Index < 0 {
+				return &object.Error{Msg: "Index out of bounds"}
+
+			}
+			idx := ar_obj.Value[node.Index]
+			return idx
+		}
+
+		return &object.Error{Msg: "Not an Array Object"}
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
-
 		// can also be builInFunctions
 
 	case *ast.IfExpression:
@@ -277,6 +289,23 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	case *ast.ReturnStatement:
 		val := Eval(node.Value, env)
 		return &object.Return{Value: val}
+
+	case *ast.ArrayExpression:
+		args := evalArguments(node.Value, env)
+
+		for _, arg := range args {
+			if args[0].Type() != arg.Type() {
+				return &object.Error{Msg: "Different Types Array not Allowed"}
+			}
+
+		}
+
+		if args[0].Type() == object.STRING_OBJ || args[0].Type() == object.INTEGER_OBJ {
+			return &object.Array{Value: args}
+		}
+
+		return &object.Error{Msg: "Objects not of type String or Integer"}
+
 	case *ast.PrefixExpression: // can be - or !
 		right := Eval(node.Right, env)
 		return evaluateOp(right, node.Operator)
@@ -324,14 +353,6 @@ func evalOuterFunc(obj object.Object, args []object.Object) object.Object {
 		return &object.Error{Msg: "Not a function object"}
 
 	}
-	// fn, ok := obj.(*object.Function)
-	// if !ok {
-	// 	return &object.Error{Msg: "Not a function object"}
-	// }
-
-	// extended := extendEnv(fn, args)
-	// evaluated := Eval(fn.Body, extended)
-	// return unwrapReturn(evaluated)
 
 }
 
@@ -362,7 +383,6 @@ func evalArguments(args []ast.Expression, env *object.Enviorment) []object.Objec
 	}
 
 	return result
-
 }
 
 func evalBlockStatements(bstmt *ast.BlockStatement, env *object.Enviorment) object.Object {

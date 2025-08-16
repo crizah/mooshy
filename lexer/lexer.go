@@ -55,6 +55,10 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '(':
 		tok = newToken(token.LPAREN, l.ch)
+	case '[':
+		tok = newToken(token.LBLOCK, l.ch)
+	case ']':
+		tok = newToken(token.RBLOCK, l.ch)
 	case ')':
 		tok = newToken(token.RPAREN, l.ch)
 	case '{':

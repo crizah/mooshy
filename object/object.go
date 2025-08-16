@@ -18,6 +18,7 @@ const (
 	ERROR_OBJ    = "ERROR"
 	FUNC_OBJ     = "FUNCTION"
 	BUILT_IN_OBJ = "BUILT_IN"
+	ARRAY_OBJ    = "ARRAY"
 )
 
 type BuiltInFunction func(args ...Object) Object
@@ -54,6 +55,32 @@ type Object interface {
 
 type Integer struct {
 	Value int64
+}
+
+type Array struct {
+	Value []Object
+}
+
+func (arr *Array) Type() ObjectType {
+	return ARRAY_OBJ
+}
+
+func (arr *Array) Inspect() string {
+
+	var output bytes.Buffer
+
+	output.WriteString("[")
+	for i, p := range arr.Value {
+		if i == len(arr.Value)-1 {
+			output.WriteString(p.Inspect() + "]")
+
+		} else {
+			output.WriteString(p.Inspect() + ", ")
+		}
+	}
+
+	return output.String()
+
 }
 
 type Bool struct {

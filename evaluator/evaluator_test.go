@@ -439,3 +439,16 @@ func TestLenFunc(t *testing.T) {
 
 	}
 }
+
+// let x = ["mew", "no"];
+// [mew, no]
+// >> let x = [true, false];
+// ERROR Objects not of type String or Integer
+// >> let x = ["mew", 12];
+// ERROR Different Types Array not Allowed
+// >> let x = [12, 23, 34]; x[1];
+// 23
+// >> let x = [12, 23, 34]; x[2];
+// 34
+// >> let x = [12, 23, 34]; x[3];
+// ERROR Index out of bounds

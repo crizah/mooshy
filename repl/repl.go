@@ -114,7 +114,6 @@ func Start(in io.Reader, out io.Writer) {
 
 func printParserErrors(out io.Writer, errors []string) {
 	io.WriteString(out, "are u sure u did it rite?\n")
-	io.WriteString(out, MEOW)
 	io.WriteString(out, "\n")
 
 	io.WriteString(out, " parser errors:\n")

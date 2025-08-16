@@ -39,6 +39,8 @@ const (
 	RPAREN    = ")"
 	LBRACE    = "{"
 	RBRACE    = "}"
+	LBLOCK    = "["
+	RBLOCK    = "]"
 	COMMA     = ","
 	SEMICOLON = ";"
 

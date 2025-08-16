@@ -28,6 +28,7 @@ var precedences = map[token.TokenType]int{
 	token.DIVIDE:   PRODUCT,
 	token.MULTIPLY: PRODUCT,
 	token.LPAREN:   CALL,
+	token.LBLOCK:   CALL,
 }
 
 type Parser struct {
@@ -240,28 +241,100 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	s := &ast.CallExpression{Token: p.currToken, Function: function}
+	// curr = (
 	s.Arguments = p.parseArguments()
 	return s
+}
+
+func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
+	s := &ast.IndexExpression{Token: p.currToken, Name: arr}
+	// curr = [
+	p.nextToken()
+	if !p.curTokenIs(token.INT) {
+		e := "Expected Integer Value"
+		p.Errors = append(p.Errors, e)
+		return nil
+	}
+
+	val, err := strconv.ParseInt(p.currToken.Literal, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	s.Index = val
+	p.nextToken()
+	if !p.curTokenIs(token.RBLOCK) {
+		e := "Expected closing ]"
+		p.Errors = append(p.Errors, e)
+		return nil
+
+	}
+	p.nextToken()
+	return s
+
+}
+
+func (p *Parser) parseArrayExpression() ast.Expression {
+
+	arr := &ast.ArrayExpression{Token: p.currToken}
+	val := p.parseArguments()
+	if len(val) != 0 {
+		arr.Value = val
+	}
+
+	// otherwise stays nil for edge case handling
+
+	return arr
+
 }
 
 func (p *Parser) parseArguments() []ast.Expression {
 	args := []ast.Expression{}
 	// add(x, y, x)
-	p.nextToken()
-	if p.curTokenIs(token.RPAREN) { // add() curr = )
-		p.nextToken() // EOF
-		return args
-	}
 
-	args = append(args, p.parseExpression(LOWEST)) // currToken is x
-	p.nextToken()
+	// curr = (
 
-	for !p.curTokenIs(token.RPAREN) {
-		if p.curTokenIs(token.COMMA) {
+	switch p.currToken.Literal {
+	case token.LPAREN:
+		p.nextToken()
+		if p.curTokenIs(token.RPAREN) { // add() curr = )
+			p.nextToken() // EOF
+			return args
+		}
+
+		args = append(args, p.parseExpression(LOWEST)) // currToken is x
+		p.nextToken()
+
+		for !p.curTokenIs(token.RPAREN) {
+			if p.curTokenIs(token.COMMA) {
+				p.nextToken()
+			}
+			args = append(args, p.parseExpression(LOWEST))
 			p.nextToken()
 		}
-		args = append(args, p.parseExpression(LOWEST))
+
+	case token.LBLOCK:
 		p.nextToken()
+		if p.curTokenIs(token.RBLOCK) { // add() curr = )
+			p.nextToken() // EOF
+			return args
+		}
+
+		args = append(args, p.parseExpression(LOWEST)) // currToken is x
+		// first
+		p.nextToken()
+
+		for !p.curTokenIs(token.RBLOCK) {
+			if p.curTokenIs(token.COMMA) {
+				p.nextToken()
+			}
+
+			// come on man u should also have .type be able to be used outside of switch cases
+
+			args = append(args, p.parseExpression(LOWEST))
+			p.nextToken()
+		}
+
 	}
 
 	return args
@@ -299,6 +372,9 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.putInfix(token.LPAREN, p.parseCallExpression) // in add(x,y), ( is at the infix position, after pasing the function
 	// p.putPrefix(token.RETURN, p.parseReturn)
+	p.putPrefix(token.LBLOCK, p.parseArrayExpression)
+
+	p.putInfix(token.LBLOCK, p.parseIndexExpression)
 
 	return p
 }

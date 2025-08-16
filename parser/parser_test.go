@@ -849,3 +849,83 @@ func TestCallExpression(t *testing.T) {
 		return
 	}
 }
+
+func TestArrays(t *testing.T) {
+	input := `
+     [5, 6, 987];`
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.ParseProgram()
+
+	if len(prog.Statements) != 1 {
+		t.Errorf("len not 1. got %d", len(prog.Statements))
+
+	}
+
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("not expresion statement. got %T", stmt)
+
+	}
+
+	arrExp, ok := stmt.Expression.(*ast.ArrayExpression)
+	if !ok {
+		t.Errorf("not array expression. got %T", stmt.Expression)
+		return
+
+	}
+
+	if len(arrExp.Value) != 3 {
+		t.Errorf("len not 3. got %d", len(arrExp.Value))
+
+	}
+
+	a, ok := arrExp.Value[0].(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("not an IntegerLiteral. got %T", a)
+		return
+	}
+
+	if !testIntegerLiteral(t, a, int64(5)) {
+		t.Errorf("didnt pass")
+		return
+	}
+
+}
+
+func TestIndexExp(t *testing.T) {
+	input := `
+     arr[5];`
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.ParseProgram()
+
+	if len(prog.Statements) != 1 {
+		t.Errorf("len not 1. got %d", len(prog.Statements))
+
+	}
+
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("not expresion statement. got %T", stmt)
+
+	}
+
+	arrExp, ok := stmt.Expression.(*ast.IndexExpression)
+	if !ok {
+		t.Errorf("not index expression. got %T", stmt.Expression)
+		return
+
+	}
+
+	if !testIdentifier(t, arrExp.Name, "arr") {
+		t.Errorf("got error")
+		return
+	}
+
+	if arrExp.Index != int64(5) {
+		t.Errorf("not 5 got %d", arrExp.Index)
+		return
+	}
+
+}

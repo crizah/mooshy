@@ -49,6 +49,58 @@ func (p *Program) String() string {
 	return output.String()
 }
 
+type IndexExpression struct {
+	Token token.Token
+	Name  Expression
+	Index int64 // make this an expression so it can be an integerLiteral
+}
+
+func (ar *IndexExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString(ar.Name.String() + "[")
+	x := strconv.FormatInt(ar.Index, 10)
+	output.WriteString(x + "]")
+
+	return output.String()
+}
+
+func (ar *IndexExpression) TokenLiteral() string {
+	return ar.Token.Literal
+
+}
+
+func (ar *IndexExpression) ExpressionNode() {}
+
+type ArrayExpression struct {
+	Token token.Token
+	Value []Expression
+}
+
+func (ar *ArrayExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("[")
+	for i, val := range ar.Value {
+		if i == len(ar.Value)-1 {
+			output.WriteString(val.String() + "]")
+		} else {
+			output.WriteString(val.String() + ", ")
+
+		}
+
+	}
+
+	return output.String()
+}
+
+func (ar *ArrayExpression) TokenLiteral() string {
+	return ar.Token.Literal
+
+}
+
+func (ar *ArrayExpression) ExpressionNode() {}
+
 type LetStatement struct {
 	// this is a node of type Statement
 
