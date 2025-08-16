@@ -11,6 +11,7 @@ var (
 	NULL  = &object.Null{}
 	TRUE  = &object.Bool{Value: true}
 	FALSE = &object.Bool{Value: false}
+	WRONG = &object.Error{Msg: "Cant use BuiltIn functions as Identifiers"}
 )
 
 func evalNotOp(right object.Object) object.Object {
@@ -195,7 +196,7 @@ func evalInfixOp(left object.Object, right object.Object, operator string) objec
 	}
 	// return NULL
 
-	return &object.Error{Msg: "Unrecogniused Object Type"}
+	return &object.Error{Msg: "Unrecogniused Object Type "}
 
 	// return NULL
 
@@ -245,9 +246,18 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	case *ast.BlockStatement:
 		return evalBlockStatements(node, env)
 		// return evalStatements(node.Statements)
-	case *ast.LetStatement: // THIS IS WHERE THE ISSUE IS
-		val := Eval(node.Value, env)
-		return env.Put(node.Name.Value, val)
+	case *ast.LetStatement:
+		switch node.Name.Value {
+		case "len":
+			return WRONG
+		case "sum":
+			return WRONG
+
+		default:
+			val := Eval(node.Value, env)
+			return env.Put(node.Name.Value, val)
+
+		}
 
 	case *ast.FunctionLiteral:
 		return &object.Function{Params: node.Parameter, Body: node.Body, Env: env}

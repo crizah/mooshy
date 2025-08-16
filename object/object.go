@@ -43,7 +43,8 @@ func (e *Error) Type() ObjectType {
 }
 
 func (e *Error) Inspect() string {
-	return fmt.Sprintf("error: %s", e.Msg)
+	return fmt.Sprintf("ERROR %s", e.Msg)
+	// return ERROR_OBJ
 }
 
 type Object interface {
@@ -92,6 +93,8 @@ func (f *Function) Inspect() string {
 	output.WriteString("}")
 	return output.String()
 
+	// return FUNC_OBJ
+
 }
 
 func (f *Function) Type() ObjectType {
@@ -109,6 +112,7 @@ func (r *Return) Type() ObjectType {
 
 func (r *Return) Inspect() string {
 	return fmt.Sprintf("RETURN %s", r.Value.Inspect())
+	// return RETURN_OBJ
 }
 
 type Null struct{}
@@ -121,6 +125,8 @@ func (nl *Null) Type() ObjectType {
 }
 func (str *String) Inspect() string {
 	return fmt.Sprint(str.Value)
+	// return STRING_OBJ
+
 }
 
 func (str *String) Type() ObjectType {
@@ -129,6 +135,8 @@ func (str *String) Type() ObjectType {
 
 func (b *Bool) Inspect() string {
 	return fmt.Sprintf("%t", b.Value)
+
+	// return BOOL_OBJ
 }
 
 func (b *Bool) Type() ObjectType {
@@ -136,6 +144,7 @@ func (b *Bool) Type() ObjectType {
 }
 func (in *Integer) Inspect() string {
 	return fmt.Sprintf("%d", in.Value)
+	// return INTEGER_OBJ
 }
 
 func (in *Integer) Type() ObjectType {
