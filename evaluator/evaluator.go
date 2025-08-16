@@ -253,12 +253,14 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 		return &object.Function{Params: node.Parameter, Body: node.Body, Env: env}
 	case *ast.CallExpression:
 
-		fun := Eval(node.Function, env)
+		fun := Eval(node.Function, env) // of this is len, then trigger builtIn
 		args := evalArguments(node.Arguments, env)
 		return evalOuterFunc(fun, args)
 
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+
+		// can also be builInFunctions
 
 	case *ast.IfExpression:
 		return evalIfExpressions(node, env)
@@ -284,15 +286,42 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	return NULL
 }
 
-func evalOuterFunc(obj object.Object, args []object.Object) object.Object {
-	fn, ok := obj.(*object.Function)
-	if !ok {
-		return &object.Error{Msg: "Not a function object"}
+func evalIdentifier(
+	node *ast.Identifier,
+	env *object.Enviorment,
+) object.Object {
+
+	if val, ok := env.Get(node.Value); ok {
+		return val
+	} else if b, ok := builtins[node.Value]; ok {
+		return b // this is a function object. we need to call Fn
 	}
 
-	extended := extendEnv(fn, args)
-	evaluated := Eval(fn.Body, extended)
-	return unwrapReturn(evaluated)
+	return &object.Error{Msg: "identifier not found: " + node.Value}
+
+}
+
+func evalOuterFunc(obj object.Object, args []object.Object) object.Object {
+
+	switch fn := obj.(type) {
+	case *object.Function:
+		extended := extendEnv(fn, args)
+		evaluated := Eval(fn.Body, extended)
+		return unwrapReturn(evaluated)
+	case *object.BuiltIn:
+		return fn.Fn(args...)
+	default:
+		return &object.Error{Msg: "Not a function object"}
+
+	}
+	// fn, ok := obj.(*object.Function)
+	// if !ok {
+	// 	return &object.Error{Msg: "Not a function object"}
+	// }
+
+	// extended := extendEnv(fn, args)
+	// evaluated := Eval(fn.Body, extended)
+	// return unwrapReturn(evaluated)
 
 }
 
@@ -326,17 +355,6 @@ func evalArguments(args []ast.Expression, env *object.Enviorment) []object.Objec
 
 }
 
-func evalIdentifier(
-	node *ast.Identifier,
-	env *object.Enviorment,
-) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return &object.Error{Msg: "identifier not found: " + node.Value}
-	}
-	return val
-}
-
 func evalBlockStatements(bstmt *ast.BlockStatement, env *object.Enviorment) object.Object {
 	var result object.Object
 
@@ -353,19 +371,19 @@ func evalBlockStatements(bstmt *ast.BlockStatement, env *object.Enviorment) obje
 	return result
 }
 
-func evalProgram(prog *ast.Program, env *object.Enviorment) object.Object {
-	var result object.Object
-	for _, stmt := range prog.Statements {
-		result := Eval(stmt, env)
+// func evalProgram(prog *ast.Program, env *object.Enviorment) object.Object {
+// 	var result object.Object
+// 	for _, stmt := range prog.Statements {
+// 		result := Eval(stmt, env)
 
-		if ret, ok := result.(*object.Return); ok {
-			return ret.Value
-		}
+// 		if ret, ok := result.(*object.Return); ok {
+// 			return ret.Value
+// 		}
 
-	}
+// 	}
 
-	return result
-}
+// 	return result
+// }
 
 func helper(input bool) object.Object {
 	if input {

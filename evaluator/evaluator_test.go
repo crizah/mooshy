@@ -395,3 +395,47 @@ func TestFunctionApplication(t *testing.T) {
 		testIntegerObject(t, testEval(t, tt.input), tt.expected)
 	}
 }
+
+func testErrrorObjects(t *testing.T, obj object.Object, expected string) bool {
+	er, ok := obj.(*object.Error)
+	if !ok {
+		t.Errorf("Not Error object, got %T", obj)
+		return false
+	}
+
+	if er.Msg != expected {
+		t.Errorf("Not as expected. expected %s, got %s", expected, er.Msg)
+		return false
+	}
+	return true
+
+}
+
+func TestLenFunc(t *testing.T) {
+	tests := []struct {
+		input  string
+		length interface{}
+	}{
+		{`len("")`, 0},
+		{`len("meow")`, 4},
+		{`len("hello how are u")`, 15},
+		{`len(1)`, "Expected String Object"},
+		{`len(true)`, "Expected String Object"},
+		{`len("yeah", "naur")`, "Expected 1 arguments"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		ex, ok := tt.length.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(ex))
+		} else {
+			er, ok := tt.length.(string)
+			if ok {
+				testErrrorObjects(t, evaluated, er)
+
+			}
+		}
+
+	}
+}

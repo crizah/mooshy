@@ -10,14 +10,29 @@ import (
 type ObjectType string
 
 const (
-	INTEGER_OBJ = "INTEGER"
-	BOOL_OBJ    = "BOOL"
-	STRING_OBJ  = "STRING"
-	NULL_OBJ    = "NULL"
-	RETURN_OBJ  = "RETURN"
-	ERROR_OBJ   = "ERROR"
-	FUNC_OBJ    = "FUNCTION"
+	INTEGER_OBJ  = "INTEGER"
+	BOOL_OBJ     = "BOOL"
+	STRING_OBJ   = "STRING"
+	NULL_OBJ     = "NULL"
+	RETURN_OBJ   = "RETURN"
+	ERROR_OBJ    = "ERROR"
+	FUNC_OBJ     = "FUNCTION"
+	BUILT_IN_OBJ = "BUILT_IN"
 )
+
+type BuiltInFunction func(args ...Object) Object
+
+type BuiltIn struct {
+	Fn BuiltInFunction
+}
+
+func (b *BuiltIn) Type() ObjectType {
+	return BUILT_IN_OBJ
+}
+
+func (b *BuiltIn) Inspect() string {
+	return "BuiltIn Function"
+}
 
 type Error struct {
 	Msg string
