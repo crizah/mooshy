@@ -929,3 +929,41 @@ func TestIndexExp(t *testing.T) {
 	}
 
 }
+
+func TestReassignExp(t *testing.T) {
+	input := `
+    x = 12;`
+	l := lexer.New(input)
+	p := New(l)
+	prog := p.ParseProgram()
+
+	if len(prog.Statements) != 1 {
+		t.Errorf("len not 1. got %d", len(prog.Statements))
+
+	}
+
+	stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("not expresion statement. got %T", stmt)
+
+	}
+
+	arrExp, ok := stmt.Expression.(*ast.ReAssignExpression)
+	if !ok {
+		t.Errorf("not Reassign expression. got %T", stmt.Expression)
+		return
+
+	}
+
+	if !testIdentifier(t, arrExp.Name, "x") {
+		t.Errorf("got error")
+		return
+	}
+
+	if !testIntegerLiteral(t, arrExp.Value, int64(12)) {
+		t.Errorf("got error")
+		return
+
+	}
+
+}

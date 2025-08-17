@@ -260,6 +260,28 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 			return env.Put(node.Name.Value, val)
 
 		}
+	case *ast.ReAssignExpression:
+		val := Eval(node.Value, env)
+		id, ok := node.Name.(*ast.Identifier)
+		if ok {
+
+			_, c := env.Get(id.String())
+			if !c {
+				return &object.Error{Msg: "Cant assign an undeclared value"}
+
+			}
+
+			return env.Put(id.String(), val)
+
+			// if env.Get(node.Name.String()) == nil, false {
+			// 	return &object.Error{Msg: "Cant assign an undeclared value"}
+
+			// }
+
+		}
+		return &object.Error{Msg: "Not an identifier" + node.Name.String()}
+
+		// return env.Put(node.Name.String(), val)
 
 	case *ast.FunctionLiteral:
 		return &object.Function{Params: node.Parameter, Body: node.Body, Env: env}
@@ -282,6 +304,7 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 		}
 
 		return &object.Error{Msg: "Not an Array Object"}
+
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 		// can also be builInFunctions

@@ -82,6 +82,9 @@ func testIntegerObject(t *testing.T, obj object.Object, expectedValue int64) boo
 	it, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf("object is not Integer. got=%T", obj)
+		if err, ok := obj.(*object.Error); ok {
+			t.Error(err.Msg)
+		}
 		return false
 	}
 
@@ -440,6 +443,21 @@ func TestLenFunc(t *testing.T) {
 	}
 }
 
+// func TestReassign(t *testing.T) {
+// 	tests := []struct {
+// 		input    string
+// 		expected int64
+// 	}{
+// 		{"x = 12;", int64(12)},
+// 	}
+
+// 	for _, tt := range tests {
+// 		evaluated := testEval(t, tt.input)
+// 		testIntegerObject(t, evaluated, tt.expected)
+// 	}
+
+// }
+
 // let x = ["mew", "no"];
 // [mew, no]
 // >> let x = [true, false];
@@ -461,3 +479,6 @@ func TestLenFunc(t *testing.T) {
 // >> let x = [1, 2]; append(x, "yeah");
 // ERROR Val not of same type as Array
 // >>
+
+// >> let append = 12;
+// ERROR Cant use BuiltIn functions as Identifiers

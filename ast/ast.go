@@ -55,6 +55,49 @@ type IndexExpression struct {
 	Index int64 // make this an expression so it can be an integerLiteral
 }
 
+type ForExpression struct {
+	Iterator  []Expression    // need to be only 3 arguments of type infix , infix, postfix
+	Constants InfixExpression // with infix being :
+
+	// write its string anf tokenLiteral and all that
+}
+
+type ReAssignExpression struct {
+	Token token.Token
+	Name  Expression
+	Value Expression
+}
+
+func (re *ReAssignExpression) ExpressionNode() {}
+
+func (re *ReAssignExpression) String() string {
+	var output bytes.Buffer
+
+	// output.WriteString(re.TokenLiteral() + " ")
+	output.WriteString(re.Name.String() + " = ")
+	if re.Value != nil {
+		output.WriteString(re.Value.String())
+	}
+	output.WriteString(";")
+
+	return output.String()
+
+}
+func (re *ReAssignExpression) TokenLiteral() string {
+	return re.Token.Literal
+}
+
+type ForLoopExpressions struct {
+	Token token.Token
+	// for(i = 0; i<7; i++){}
+	Params ForExpression // need to be only 3
+	// can be array of expressions or can be an infix expression with colon in the middle
+	// for(x: args){}
+	Body *BlockStatement
+
+	// write its string anf tokenLiteral and all that
+}
+
 func (ar *IndexExpression) String() string {
 	var output bytes.Buffer
 

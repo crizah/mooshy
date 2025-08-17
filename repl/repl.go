@@ -4,6 +4,8 @@
 package repl
 
 import (
+	// "bufio"
+	// "fmt"
 	"io"
 	"mooshy/evaluator"
 	"mooshy/lexer"
@@ -57,7 +59,7 @@ const MEOW = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠇⠀⢀⠀⢉⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠈⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`
 
-func Start(input string, out io.Writer) {
+func Start(in string, out io.Writer) {
 	// scanner := bufio.NewScanner(in)
 	// for {
 
@@ -79,7 +81,7 @@ func Start(input string, out io.Writer) {
 	// 	// 	}
 	// 	// }
 
-	l := lexer.New(input)
+	l := lexer.New(in)
 	p := parser.New(l)
 	prog := p.ParseProgram()
 
@@ -107,8 +109,9 @@ func Start(input string, out io.Writer) {
 		io.WriteString(out, "\n")
 	}
 
-	// }
 }
+
+// }
 
 func printParserErrors(out io.Writer, errors []string) {
 	io.WriteString(out, "are u sure u did it rite?\n")

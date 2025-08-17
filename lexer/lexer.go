@@ -71,6 +71,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.COMMA, l.ch)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
+	case ':':
+		tok = newToken(token.COLON, l.ch)
 	case '=':
 		if l.peekChar() == '=' {
 
@@ -111,7 +113,7 @@ func (l *Lexer) NextToken() token.Token {
 			// ignore till ; encountered, cux idk how else i could do that
 			// should find a way
 
-			for l.ch != 10 {
+			for l.ch != 10 { // the ascii code for new line is 10 who wpuld have thought
 				l.readChar()
 			}
 			return l.NextToken()

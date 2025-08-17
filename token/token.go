@@ -45,6 +45,7 @@ const (
 	RBLOCK    = "]"
 	COMMA     = ","
 	SEMICOLON = ";"
+	COLON     = ":"
 
 	// literals and identifiers
 	INT    = "INT"
@@ -54,5 +55,5 @@ const (
 	// errors
 	ILLEGAL = "ILLEGAL" // token we have not defined
 	EOF     = "EOF"     // signifies end of file
-	EOL     = "EOL"
+
 )

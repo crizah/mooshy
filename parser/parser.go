@@ -29,6 +29,7 @@ var precedences = map[token.TokenType]int{
 	token.MULTIPLY: PRODUCT,
 	token.LPAREN:   CALL,
 	token.LBLOCK:   CALL,
+	token.ASSIGN:   CALL,
 }
 
 type Parser struct {
@@ -246,6 +247,27 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	return s
 }
 
+func (p *Parser) parseReAssignExpression(ident ast.Expression) ast.Expression {
+	// x= 12
+	// curr =
+	s := &ast.ReAssignExpression{Token: p.currToken, Name: ident}
+	p.nextToken()
+	s.Value = p.parseExpression(LOWEST) // this might not work
+
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.nextToken()
+		if p.curTokenIs(token.EOF) {
+			e := ("expected semicolon ")
+			p.Errors = append(p.Errors, e)
+			return nil
+
+		}
+	}
+	// p.nextToken()
+
+	return s
+}
+
 func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
 	s := &ast.IndexExpression{Token: p.currToken, Name: arr}
 	// curr = [
@@ -375,6 +397,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.putPrefix(token.LBLOCK, p.parseArrayExpression)
 
 	p.putInfix(token.LBLOCK, p.parseIndexExpression)
+	p.putInfix(token.ASSIGN, p.parseReAssignExpression)
 
 	return p
 }
@@ -431,7 +454,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	// prefix is -a in -a + b
 	if prefix == nil {
 		// e := ("PrefixParseFuncs not available for" + p.currToken.Literal)
-		e := ("Expected Semicolon")
+		e := ("No attatched prefix function found")
 		p.Errors = append(p.Errors, e)
 
 		return nil
