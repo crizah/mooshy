@@ -15,7 +15,7 @@ var builtins = map[string]*object.BuiltIn{
 			case *object.Array:
 				return &object.Integer{Value: int64(len(arg.Value))}
 			default:
-				return &object.Error{Msg: "Expected String Object"}
+				return &object.Error{Msg: "Cant Perform len on this object"}
 
 			}
 
