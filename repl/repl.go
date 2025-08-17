@@ -4,8 +4,6 @@
 package repl
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 	"mooshy/evaluator"
 	"mooshy/lexer"
@@ -59,57 +57,57 @@ const MEOW = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠇⠀⢀⠀⢉⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠈⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`
 
-func Start(in io.Reader, out io.Writer) {
-	scanner := bufio.NewScanner(in)
-	for {
+func Start(input string, out io.Writer) {
+	// scanner := bufio.NewScanner(in)
+	// for {
 
-		fmt.Printf(PROMT)
+	// 	fmt.Printf(PROMT)
 
-		scanned := scanner.Scan() // read input from the user
-		if !scanned {
-			return
-		}
+	// 	scanned := scanner.Scan() // read input from the user
+	// 	if !scanned {
+	// 		return
+	// 	}
 
-		// var input string
-		// x := true
-		line := scanner.Text()
+	// 	// var input string
+	// 	// x := true
+	// 	line := scanner.Text()
 
-		// for x {
-		// 	input = input + line
-		// 	if line == "end" {
-		// 		x = false
-		// 	}
-		// }
+	// 	// for x {
+	// 	// 	input = input + line
+	// 	// 	if line == "end" {
+	// 	// 		x = false
+	// 	// 	}
+	// 	// }
 
-		l := lexer.New(line)
-		p := parser.New(l)
-		prog := p.ParseProgram()
+	l := lexer.New(input)
+	p := parser.New(l)
+	prog := p.ParseProgram()
 
-		if len(p.Errors) != 0 {
-			printParserErrors(out, p.Errors)
-			continue
-		}
-
-		// io.WriteString(out, prog.String())
-		// io.WriteString(out, "\n")
-
-		// for {
-		// 	tok := l.NextToken()
-		// 	if tok.Type == token.EOF {
-		// 		break // end of line
-		// 	}
-		// 	fmt.Printf("Type: %s, Literal: %s\n", tok.Type, tok.Literal)
-		// }
-
-		env := object.NewEnv()
-
-		evaluated := evaluator.Eval(prog, env)
-		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
-			io.WriteString(out, "\n")
-		}
+	if len(p.Errors) != 0 {
+		printParserErrors(out, p.Errors)
 
 	}
+
+	// io.WriteString(out, prog.String())
+	// io.WriteString(out, "\n")
+
+	// for {
+	// 	tok := l.NextToken()
+	// 	if tok.Type == token.EOF {
+	// 		break // end of line
+	// 	}
+	// 	fmt.Printf("Type: %s, Literal: %s\n", tok.Type, tok.Literal)
+	// }
+
+	env := object.NewEnv()
+
+	evaluated := evaluator.Eval(prog, env)
+	if evaluated != nil {
+		io.WriteString(out, evaluated.Inspect())
+		io.WriteString(out, "\n")
+	}
+
+	// }
 }
 
 func printParserErrors(out io.Writer, errors []string) {

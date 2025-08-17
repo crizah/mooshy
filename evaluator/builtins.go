@@ -23,6 +23,29 @@ var builtins = map[string]*object.BuiltIn{
 		},
 	},
 
+	"append": &object.BuiltIn{
+		Fn: func(args ...object.Object) object.Object {
+			// append(Array, value)
+			if len(args) != 2 {
+				return &object.Error{Msg: "2 arguments expected"}
+			}
+
+			fn, ok := args[0].(*object.Array)
+			if !ok {
+				return &object.Error{Msg: "Expected array object as argument"}
+			}
+
+			// args[1] needs to be of same Object type as args[0]
+			if fn.Value[0].Type() != args[1].Type() {
+				return &object.Error{Msg: "Val not of same type as Array"}
+			}
+
+			fn.Value = append(fn.Value, args[1])
+			return fn
+
+		},
+	},
+
 	"sum": &object.BuiltIn{
 		Fn: func(args ...object.Object) object.Object {
 			// args all need to be of same type. can be string or int. not bool

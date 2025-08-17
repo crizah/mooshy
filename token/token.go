@@ -16,6 +16,8 @@ const (
 	ELSE   = "ELSE"
 	TRUE   = "TRUE"
 	FALSE  = "FALSE"
+	FOR    = "FOR"
+	WHILE  = "WHILE"
 
 	// operators
 	ASSIGN       = "="
@@ -52,5 +54,5 @@ const (
 	// errors
 	ILLEGAL = "ILLEGAL" // token we have not defined
 	EOF     = "EOF"     // signifies end of file
-
+	EOL     = "EOL"
 )

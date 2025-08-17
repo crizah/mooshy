@@ -31,7 +31,7 @@ let wow = "yay";
 let x_128 = 7;
 
 x_128++;
-x_128--;
+x_128--;  // this is comment 
 
 
 `
@@ -129,6 +129,7 @@ x_128--;
 		{token.IDENT, "x_128"},
 		{token.DECREMENT, "--"},
 		{token.SEMICOLON, ";"},
+
 		{token.EOF, ""},
 	}
 

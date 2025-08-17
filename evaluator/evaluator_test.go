@@ -419,8 +419,8 @@ func TestLenFunc(t *testing.T) {
 		{`len("")`, 0},
 		{`len("meow")`, 4},
 		{`len("hello how are u")`, 15},
-		{`len(1)`, "Expected String Object"},
-		{`len(true)`, "Expected String Object"},
+		{`len(1)`, "Cant Perform len on this object"},
+		{`len(true)`, "Cant Perform len on this object"},
 		{`len("yeah", "naur")`, "Expected 1 arguments"},
 	}
 
@@ -452,3 +452,12 @@ func TestLenFunc(t *testing.T) {
 // 34
 // >> let x = [12, 23, 34]; x[3];
 // ERROR Index out of bounds
+
+// Hello MOOSHY\shaiz! This is the Mooshy programming language!
+// >> let x = [1, 2]; append(x, 13); len(x);
+// 3
+// >> let x = [1, 2]; append(x, 13);
+// [1, 2, 13]
+// >> let x = [1, 2]; append(x, "yeah");
+// ERROR Val not of same type as Array
+// >>

@@ -48,6 +48,8 @@ var keywords = map[string]token.TokenType{
 	"return": token.RETURN,
 	"true":   token.TRUE,
 	"false":  token.FALSE,
+	"for":    token.FOR,
+	"while":  token.WHILE,
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -105,7 +107,19 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = newToken(token.MULTIPLY, l.ch)
 	case '/':
-		tok = newToken(token.DIVIDE, l.ch)
+		if l.peekChar() == '/' {
+			// ignore till ; encountered, cux idk how else i could do that
+			// should find a way
+
+			for l.ch != 10 {
+				l.readChar()
+			}
+			return l.NextToken()
+
+		} else {
+			tok = newToken(token.DIVIDE, l.ch)
+		}
+
 	case '!':
 		if l.peekChar() == '=' {
 

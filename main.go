@@ -53,12 +53,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%s \n", HAII)
+	// fmt.Printf("%s \n", HAII)
 	// fmt.Printf("\n")
 	fmt.Printf("Hello %s! This is the Mooshy programming language!\n",
 		user.Username)
 	// fmt.Println("Feel free to type in commands")
 
-	repl.Start(os.Stdin, os.Stdout)
+	dat, err := os.ReadFile("codeFile.mooshy")
+	check(err)
+	// fmt.Print(string(dat))
 
+	repl.Start(string(dat), os.Stdout)
+
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }

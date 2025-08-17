@@ -252,6 +252,8 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 			return WRONG
 		case "sum":
 			return WRONG
+		case "append":
+			return WRONG
 
 		default:
 			val := Eval(node.Value, env)
