@@ -1,7 +1,10 @@
-
+// let a = len("meow");
+// let b = print("meow");
 for (let i =0; i < 3; i++){
     if(i==2){
-        return 1;
+       return 1;
     }
-    let z = 10;
+   let a = print("meow");
 }
+
+let b = print("hmm");

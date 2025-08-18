@@ -1,6 +1,9 @@
 package evaluator
 
-import "mooshy/object"
+import (
+	"fmt"
+	"mooshy/object"
+)
 
 var builtins = map[string]*object.BuiltIn{
 	"len": &object.BuiltIn{
@@ -42,6 +45,24 @@ var builtins = map[string]*object.BuiltIn{
 
 			fn.Value = append(fn.Value, args[1])
 			return fn
+
+		},
+	},
+
+	"print": &object.BuiltIn{
+		Fn: func(args ...object.Object) object.Object {
+			// s := len(args)
+			// if s != 1 {
+			// 	return &object.Error{Msg: "More than 1 args"}
+
+			// }
+
+			// return &object.String{Value: args[0].Inspect()}
+
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+			return NULL
 
 		},
 	},
