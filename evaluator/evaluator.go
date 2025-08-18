@@ -288,148 +288,192 @@ func isTrue(condition object.Object) bool {
 
 // }
 
-func evalForLoopExp(exp *ast.ForLoopExpressions, env *object.Enviorment) object.Object {
-	// for(let i =0; i<12; i++)
+// func evalForLoopExp(exp *ast.ForLoopExpressions, env *object.Enviorment) object.Object {
+// 	// for(let i =0; i<12; i++)
 
+// 	bod, ok := exp.Params.(*ast.BlockExpression)
+// 	if !ok {
+// 		return NULL
+// 	}
+// 	letStmt, ok := bod.Start.(*ast.LetStatement)
+// 	if !ok {
+// 		return &object.Error{Msg: "Needs to be a let statement"}
+
+// 	}
+
+// 	val := Eval(letStmt, env)
+
+// 	start, ok := val.(*object.Integer)
+// 	if !ok {
+// 		return &object.Error{Msg: "Needs to be integer obj"}
+
+// 	}
+
+// 	// val is starting value in form of Integer obj
+
+// 	inf, ok := bod.Condition.(*ast.InfixExpression)
+// 	if !ok {
+// 		return NULL // needs to be comparison
+// 	}
+
+// 	// if inf.Operator != "<" || inf.Operator != ">" || inf.Operator != "<=" || inf.Operator != ">=" {
+// 	// 	return &object.Error{Msg: "Operator not supported"}
+// 	// }
+
+// 	// con := Eval(inf, env) // bool obj
+// 	// right := Eval(inf.Right, env)
+// 	left := Eval(inf.Left, env)
+// 	// con := evalInfix(right, left, inf.Operator) // bool obj
+
+// 	// condition, ok := con.(*object.Bool)
+// 	// if !ok {
+// 	// 	return &object.Error{Msg: "not bool obj"}
+
+// 	// }
+
+// 	le, ok := left.(*object.Integer)
+// 	if !ok {
+// 		return &object.Error{Msg: "Needs to be Integer"}
+// 	}
+
+// 	// post := Eval(bod.Iterator, env) // integer\
+
+// 	post, ok := bod.Iterator.(*ast.PostfixExpression)
+// 	if !ok {
+// 		return NULL
+// 	}
+
+// 	switch inf.Operator {
+// 	case "<":
+
+// 		switch post.Operator {
+// 		case "++":
+// 			for i := start.Value; i < le.Value; i++ {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		case "--":
+
+// 			for i := start.Value; i < le.Value; i-- {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		default:
+// 			return NULL
+
+// 		}
+// 	case "<=":
+// 		switch post.Operator {
+// 		case "++":
+// 			for i := start.Value; i <= le.Value; i++ {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		case "--":
+
+// 			for i := start.Value; i <= le.Value; i-- {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		default:
+// 			return NULL
+
+// 		}
+// 	case ">":
+// 		switch post.Operator {
+// 		case "++":
+// 			for i := start.Value; i > le.Value; i++ {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		case "--":
+
+// 			for i := start.Value; i > le.Value; i-- {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		default:
+// 			return NULL
+
+// 		}
+// 	case ">=":
+// 		switch post.Operator {
+// 		case "++":
+// 			for i := start.Value; i >= le.Value; i++ {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		case "--":
+
+// 			for i := start.Value; i >= le.Value; i-- {
+// 				env.Put(letStmt.Name.Value, &object.Integer{Value: i})
+// 				Eval(exp.Body, env)
+
+// 			}
+// 		default:
+// 			return NULL
+
+// 		}
+
+// 	}
+// 	return NULL
+
+// }
+
+func evalForLoopExp(exp *ast.ForLoopExpressions, env *object.Enviorment) object.Object {
 	bod, ok := exp.Params.(*ast.BlockExpression)
 	if !ok {
 		return NULL
 	}
+
+	// let i = 0
 	letStmt, ok := bod.Start.(*ast.LetStatement)
 	if !ok {
 		return &object.Error{Msg: "Needs to be a let statement"}
-
 	}
+	Eval(letStmt, env)
 
-	val := Eval(letStmt, env)
+	loopVar := letStmt.Name.Value // i
 
-	start, ok := val.(*object.Integer)
-	if !ok {
-		return &object.Error{Msg: "Needs to be integer obj"}
+	var result object.Object = NULL
 
-	}
+	for {
 
-	// val is starting value in form of Integer obj
-
-	inf, ok := bod.Condition.(*ast.InfixExpression)
-	if !ok {
-		return NULL // needs to be comparison
-	}
-
-	// if inf.Operator != "<" || inf.Operator != ">" || inf.Operator != "<=" || inf.Operator != ">=" {
-	// 	return &object.Error{Msg: "Operator not supported"}
-	// }
-
-	// con := Eval(inf, env) // bool obj
-	// right := Eval(inf.Right, env)
-	left := Eval(inf.Left, env)
-	// con := evalInfix(right, left, inf.Operator) // bool obj
-
-	// condition, ok := con.(*object.Bool)
-	// if !ok {
-	// 	return &object.Error{Msg: "not bool obj"}
-
-	// }
-
-	le, ok := left.(*object.Integer)
-	if !ok {
-		return &object.Error{Msg: "Needs to be Integer"}
-	}
-
-	// post := Eval(bod.Iterator, env) // integer\
-
-	post, ok := bod.Iterator.(*ast.PostfixExpression)
-	if !ok {
-		return NULL
-	}
-
-	switch inf.Operator {
-	case "<":
-
-		switch post.Operator {
-		case "++":
-			for i := start.Value; i < le.Value; i++ {
-				// 		start.Value = start.Value + 1
-
-				// id, ok := .Name.(*ast.Identifier)
-				// if ok {
-
-				// 	_, c := env.Get(id.String())
-				// 	if !c {
-				// 		return &object.Error{Msg: "Cant assign an undeclared value"}
-
-				// 	}
-
-				// 	return env.Put(id.String(), val)
-
-				return Eval(exp.Body, env)
-
-			}
-		case "--":
-
-			for i := start.Value; i < le.Value; i-- {
-				return Eval(exp.Body, env)
-
-			}
-		default:
-			return NULL
-
+		cond := Eval(bod.Condition, env)
+		boolCond, ok := cond.(*object.Bool)
+		if !ok {
+			return &object.Error{Msg: "Condition must evaluate to boolean"}
 		}
-	case "<=":
-		switch post.Operator {
-		case "++":
-			for i := start.Value; i <= le.Value; i++ {
-				return Eval(exp.Body, env)
-
-			}
-		case "--":
-
-			for i := start.Value; i <= le.Value; i-- {
-				return Eval(exp.Body, env)
-
-			}
-		default:
-			return NULL
-
+		if !boolCond.Value {
+			break
 		}
-	case ">":
-		switch post.Operator {
-		case "++":
-			for i := start.Value; i > le.Value; i++ {
-				return Eval(exp.Body, env)
 
-			}
-		case "--":
+		result = Eval(exp.Body, env)
 
-			for i := start.Value; i > le.Value; i-- {
-				return Eval(exp.Body, env)
-
-			}
-		default:
-			return NULL
-
+		_, ok = bod.Iterator.(*ast.PostfixExpression)
+		if !ok {
+			return &object.Error{Msg: "Iterator must be postfix expression"}
 		}
-	case ">=":
-		switch post.Operator {
-		case "++":
-			for i := start.Value; i >= le.Value; i++ {
-				return Eval(exp.Body, env)
+		x := Eval(bod.Iterator, env) // integer
 
-			}
-		case "--":
-
-			for i := start.Value; i >= le.Value; i-- {
-				return Eval(exp.Body, env)
-
-			}
-		default:
-			return NULL
+		it, ok := x.(*object.Integer)
+		if !ok {
+			return &object.Error{Msg: "Iterator must be Integr obj"}
 
 		}
 
+		env.Put(loopVar, &object.Integer{Value: it.Value})
 	}
-	return NULL
 
+	return result
 }
 
 func Eval(node ast.Node, env *object.Enviorment) object.Object {
