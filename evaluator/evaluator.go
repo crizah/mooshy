@@ -251,6 +251,187 @@ func isTrue(condition object.Object) bool {
 		return true
 	}
 }
+
+// func evalForLoopExp(exp *ast.ForLoopExpressions, env *object.Enviorment) object.Object {
+
+// 	// for(let i =0; i<12; i++)
+
+// 	result := &object.ForLoop{}
+
+// 	bod, ok := exp.Params.(*ast.BlockExpression)
+// 	if !ok {
+// 		return NULL
+// 	}
+// 	letStmt, ok := bod.Start.(*ast.LetStatement)
+// 	if !ok {
+// 		return &object.Error{Msg: "Needs to be a let statement"}
+
+// 	}
+// 	val := Eval(letStmt.Value, env)
+// 	env.Put(letStmt.Name.Value, val)
+// 	result.Name = val // to integer obj
+
+// 	inf, ok := bod.Condition.(*ast.InfixExpression)
+// 	if !ok {
+// 		return NULL // needs to be comparison
+// 	}
+
+// 	if inf.Operator != "<" || inf.Operator != ">" || inf.Operator != "<=" || inf.Operator != ">=" {
+// 		return &object.Error{Msg: "Operator not suppoeted"}
+// 	}
+
+// 	right := Eval(inf.Right, env)
+// 	left := Eval(inf.Left, env)
+// 	result.Condition = evalInfix(right, left, inf.Operator) // bool obj
+
+// 	return result
+
+// }
+
+func evalForLoopExp(exp *ast.ForLoopExpressions, env *object.Enviorment) object.Object {
+	// for(let i =0; i<12; i++)
+
+	bod, ok := exp.Params.(*ast.BlockExpression)
+	if !ok {
+		return NULL
+	}
+	letStmt, ok := bod.Start.(*ast.LetStatement)
+	if !ok {
+		return &object.Error{Msg: "Needs to be a let statement"}
+
+	}
+
+	val := Eval(letStmt, env)
+
+	start, ok := val.(*object.Integer)
+	if !ok {
+		return &object.Error{Msg: "Needs to be integer obj"}
+
+	}
+
+	// val is starting value in form of Integer obj
+
+	inf, ok := bod.Condition.(*ast.InfixExpression)
+	if !ok {
+		return NULL // needs to be comparison
+	}
+
+	// if inf.Operator != "<" || inf.Operator != ">" || inf.Operator != "<=" || inf.Operator != ">=" {
+	// 	return &object.Error{Msg: "Operator not supported"}
+	// }
+
+	// con := Eval(inf, env) // bool obj
+	// right := Eval(inf.Right, env)
+	left := Eval(inf.Left, env)
+	// con := evalInfix(right, left, inf.Operator) // bool obj
+
+	// condition, ok := con.(*object.Bool)
+	// if !ok {
+	// 	return &object.Error{Msg: "not bool obj"}
+
+	// }
+
+	le, ok := left.(*object.Integer)
+	if !ok {
+		return &object.Error{Msg: "Needs to be Integer"}
+	}
+
+	// post := Eval(bod.Iterator, env) // integer\
+
+	post, ok := bod.Iterator.(*ast.PostfixExpression)
+	if !ok {
+		return NULL
+	}
+
+	switch inf.Operator {
+	case "<":
+
+		switch post.Operator {
+		case "++":
+			for i := start.Value; i < le.Value; i++ {
+				// 		start.Value = start.Value + 1
+
+				// id, ok := .Name.(*ast.Identifier)
+				// if ok {
+
+				// 	_, c := env.Get(id.String())
+				// 	if !c {
+				// 		return &object.Error{Msg: "Cant assign an undeclared value"}
+
+				// 	}
+
+				// 	return env.Put(id.String(), val)
+
+				return Eval(exp.Body, env)
+
+			}
+		case "--":
+
+			for i := start.Value; i < le.Value; i-- {
+				return Eval(exp.Body, env)
+
+			}
+		default:
+			return NULL
+
+		}
+	case "<=":
+		switch post.Operator {
+		case "++":
+			for i := start.Value; i <= le.Value; i++ {
+				return Eval(exp.Body, env)
+
+			}
+		case "--":
+
+			for i := start.Value; i <= le.Value; i-- {
+				return Eval(exp.Body, env)
+
+			}
+		default:
+			return NULL
+
+		}
+	case ">":
+		switch post.Operator {
+		case "++":
+			for i := start.Value; i > le.Value; i++ {
+				return Eval(exp.Body, env)
+
+			}
+		case "--":
+
+			for i := start.Value; i > le.Value; i-- {
+				return Eval(exp.Body, env)
+
+			}
+		default:
+			return NULL
+
+		}
+	case ">=":
+		switch post.Operator {
+		case "++":
+			for i := start.Value; i >= le.Value; i++ {
+				return Eval(exp.Body, env)
+
+			}
+		case "--":
+
+			for i := start.Value; i >= le.Value; i-- {
+				return Eval(exp.Body, env)
+
+			}
+		default:
+			return NULL
+
+		}
+
+	}
+	return NULL
+
+}
+
 func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
@@ -258,6 +439,12 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 	case *ast.BoolExpression:
 		return helper(node.Value) // so that we dont have to make a new instance everytime
 		// return &object.Bool{Value: node.Value}
+
+	case *ast.ForLoopExpressions:
+		// for(let i =0; i<12; i++)
+
+		return evalForLoopExp(node, env)
+		// start := Eval(node.Params.Start, env)
 
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}

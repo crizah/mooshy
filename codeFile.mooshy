@@ -1,8 +1,7 @@
 
-let f = func(x , y){
-    x++;
-    let z = 2;
-    return x+y+z;
-};
-
-let a = f(1, 2);
+for (let i =0; i<3; i++){
+    if(i==2){
+        return 1;
+    }
+    let z = 10;
+}

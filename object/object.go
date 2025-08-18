@@ -19,6 +19,7 @@ const (
 	FUNC_OBJ     = "FUNCTION"
 	BUILT_IN_OBJ = "BUILT_IN"
 	ARRAY_OBJ    = "ARRAY"
+	FORLOOP_OBJ  = "FORLOOP"
 )
 
 type BuiltInFunction func(args ...Object) Object
@@ -90,6 +91,43 @@ type String struct {
 	// this is not string. it should retunr Token.String. thats why not recoignied as StringObject yet
 	// "string"
 	Value string
+}
+
+type ForLoop struct {
+	// Name      Integer // Integer object
+	// Condition Bool
+	// Iterator  Integer
+	// Todo      []Object
+
+	Name      Object // Integer object
+	Condition Object
+	Iterator  Object
+	Todo      []Object
+}
+
+func (f *ForLoop) Type() ObjectType {
+	return FORLOOP_OBJ
+
+}
+
+func (f *ForLoop) Inspect() string {
+	var output bytes.Buffer
+
+	// func(x){ }
+
+	output.WriteString("for(")
+	output.WriteString(f.Name.Inspect() + "; ")
+	output.WriteString(f.Condition.Inspect() + "; ")
+	output.WriteString(f.Iterator.Inspect() + "){")
+	for _, s := range f.Todo {
+		output.WriteString(s.Inspect())
+	}
+
+	output.WriteString("}")
+	return output.String()
+
+	// return FUNC_OBJ
+
 }
 
 type Function struct {
