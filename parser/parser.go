@@ -270,26 +270,63 @@ func (p *Parser) parseForLoopExpression() ast.Expression {
 	// curr = (
 	p.nextToken()
 
-	result.Params = p.parseArguments()
+	result.Params = p.parseParams()
 	result.Body = p.parseBlockStatement()
 
 	return result
 
 }
 
-// func (p *Parser) parseParams() ast.Expression {
-// 	result := &ast.BlockExpression{Token: p.currToken}
+func (p *Parser) parseParams() ast.Expression {
+	result := &ast.BlockExpression{Token: p.currToken}
+	// for(let i =0; i<12; i++){ }
 
-// 	for !p.curTokenIs(token.COMMA) {
-// 		start := p.parseExpression(LOWEST)
-// 		// it can be assign, let or just ident
-// 		result.Start = start
-// 		p.nextToken()
-// 	}
+	stmt := p.parseStatement()
 
-// 	return result
+	// letstmt, ok := stmt.(*ast.LetStatement)
+	// if !ok {
+	// 	e := "needs to be let stmt"
+	// 	p.Errors = append(p.Errors, e)
+	// 	return nil
 
-// }
+	// }
+
+	// result.Start = letstmt
+
+	result.Start = stmt
+	p.nextToken()
+
+	con := p.parseExpression(LOWEST)
+
+	// inf, ok := con.(*ast.InfixExpression)
+	// if !ok {
+	// 	e := "needs to be infix exp"
+	// 	p.Errors = append(p.Errors, e)
+	// 	return nil
+	// }
+
+	// result.Condition = inf
+
+	result.Condition = con
+
+	p.nextToken()
+
+	x := p.parseExpression(LOWEST)
+	// post, ok := x.(*ast.PostfixExpression)
+	// if !ok {
+	// 	e := "needs to be postfix exp"
+	// 	p.Errors = append(p.Errors, e)
+	// 	return nil
+
+	// }
+
+	result.Iterator = x
+	p.nextToken()
+	p.nextToken()
+
+	return result
+
+}
 
 func (p *Parser) parseReAssignExpression(ident ast.Expression) ast.Expression {
 	// x= 12
@@ -304,12 +341,14 @@ func (p *Parser) parseReAssignExpression(ident ast.Expression) ast.Expression {
 			e := ("expected semicolon ")
 			p.Errors = append(p.Errors, e)
 			return nil
-
 		}
+
 	}
+
 	// p.nextToken()
 
 	return s
+
 }
 
 func (p *Parser) parseIndexExpression(arr ast.Expression) ast.Expression {
@@ -556,12 +595,6 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	p.nextToken()
 
 	stmt.Value = p.parseExpression(LOWEST) // this might not work
-	// p.nextToken()
-	// if !p.curTokenIs(token.SEMICOLON) {
-	// 	e := ("expected SEMICOLON")
-	// 	p.Errors = append(p.Errors, e)
-	// 	return nil
-	// }
 
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()

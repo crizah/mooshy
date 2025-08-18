@@ -1035,42 +1035,74 @@ func TestPostFixExp(t *testing.T) {
 
 }
 
-// func TestForLoops(t *testing.T) {
-// 	tests := []struct {
-// 		input string
-// 	}{
-// 		{"for(let i =0; i<12; i++)"},
-// 	}
+func TestForLoops(t *testing.T) {
+	tests := []struct {
+		input string
+	}{
+		{`for(let i =0; i<12; i++){ 
+		let x = 12;
+		x++;
+}`},
+		// start = let i =0(let stmt), i =0 (assign expression stmt), i (ident expression statement )
+	}
 
-// 	for _, tt := range tests {
-// 		l := lexer.New(tt.input)
-// 		p := New(l)
-// 		prog := p.ParseProgram()
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		prog := p.ParseProgram()
 
-// 		if len(prog.Statements) != 1 {
-// 			t.Errorf("length not 1. got %d", len(prog.Statements))
-// 			return
-// 		}
+		if len(prog.Statements) != 1 {
+			t.Errorf("length not 1. got %d", len(prog.Statements))
+			return
+		}
 
-// 		stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
-// 		if !ok {
-// 			t.Errorf("not expression statement. got %T", stmt)
-// 			return
-// 		}
+		stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("not expression statement. got %T", stmt)
+			return
+		}
 
-// 		exp, ok := stmt.Expression.(*ast.ForLoopExpressions)
-// 		if !ok {
-// 			t.Errorf("not for loop expression. got %T", exp)
-// 			return
-// 		}
+		exp, ok := stmt.Expression.(*ast.ForLoopExpressions)
+		if !ok {
+			t.Errorf("not for loop expression. got %T", exp)
+			return
+		}
 
-// 		if len(exp.Params) != 3 {
-// 			t.Errorf("not 3. got %d", len(exp.Params))
-// 			return
-// 		}
-//         // LET STATEMENT CANT BE EXPReSSION
+		para, ok := exp.Params.(*ast.BlockExpression)
+		if !ok {
+			t.Errorf("not block exp. got %T", para)
+			return
 
-// 		start, ok := exp.Params[0].(*)
+		}
 
-// 	}
-// }
+		testLetStatement(t, para.Start, "i", 0)
+		testInfixExpression(t, para.Condition, "i", "<", 12)
+		testPostFix(t, para.Iterator, "i", "++")
+
+		if len(exp.Body.Statements) != 2 {
+			t.Errorf("Not 2. got %d", len(exp.Body.Statements))
+			// t.Errorf("%T, %T, %T", exp.Body.Statements[0], exp.Body.Statements[1], exp.Body.Statements[2])
+			return
+		}
+
+		testLetStatement(t, exp.Body.Statements[0], "x", 12)
+
+		yeah, ok := exp.Body.Statements[1].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("not exp statement got %T", exp)
+
+		}
+
+		post, ok := yeah.Expression.(*ast.PostfixExpression)
+		if !ok {
+			t.Errorf("Not postFix exp. got %T", post)
+		}
+
+		testPostFix(t, post, "x", "++")
+
+		// testLetStatement(t, )
+
+		// LET STATEMENT CANT BE EXPReSSION
+
+	}
+}

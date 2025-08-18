@@ -67,44 +67,31 @@ type IndexExpression struct {
 type ForLoopExpressions struct {
 	Token token.Token
 	// for(i = 0; i<7; i++){}
-	Params []Expression // can be infixExpression or BlockExpression
+	Params Expression //  Block Expression
 
 	// for(x: args){}
 	Body *BlockStatement
 	// write its string anf tokenLiteral and all that
 }
 
-type PostfixExpression struct {
-	Token    token.Token
-	Left     Expression
-	Operator string
-}
-
-func (pf *PostfixExpression) TokenLiteral() string {
-	return pf.Token.Literal
-}
-
-func (fl *PostfixExpression) ExpressionNode() {}
-
-func (pe *PostfixExpression) String() string {
-	var output bytes.Buffer
-
-	output.WriteString("(" + pe.Left.String() + pe.Operator + ")")
-	return output.String()
-
-}
+// type BlockExpression struct {
+// 	Token     token.Token
+// 	Start     *LetStatement      // let i =0
+// 	Condition *InfixExpression   // needs to be comparison, infix expression
+// 	Iterator  *PostfixExpression // can be postfix
+// }
 
 type BlockExpression struct {
 	Token     token.Token
-	Start     Expression // can be let i =0; just an ident or assign
-	Condition InfixExpression
-	Iterator  PostfixExpression
+	Start     Statement  // let i =0 // let stmt
+	Condition Expression // needs to be comparison, infix expression // infix
+	Iterator  Expression // can be postfix // postfix
 }
 
 func (pe *BlockExpression) String() string {
 	var output bytes.Buffer
 
-	output.WriteString(pe.Start.String() + ", " + pe.Condition.String() + ", " + pe.Iterator.String())
+	output.WriteString(pe.Start.String() + pe.Condition.String() + "; " + pe.Iterator.String())
 	return output.String()
 
 }
@@ -119,15 +106,30 @@ func (fl *ForLoopExpressions) String() string {
 	var output bytes.Buffer
 	output.WriteString("for (")
 
-	for i, id := range fl.Params {
-		if i == len(fl.Params)-1 {
-			output.WriteString(id.String() + " ){")
-		}
-		output.WriteString(id.String() + " , ")
-
-	}
+	output.WriteString(fl.Params.String())
 
 	output.WriteString(fl.Body.String() + "}")
+	return output.String()
+
+}
+
+type PostfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+}
+
+func (pf *PostfixExpression) StatementNode() {}
+func (pf *PostfixExpression) TokenLiteral() string {
+	return pf.Token.Literal
+}
+
+func (fl *PostfixExpression) ExpressionNode() {}
+
+func (pe *PostfixExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("(" + pe.Left.String() + pe.Operator + ")")
 	return output.String()
 
 }
