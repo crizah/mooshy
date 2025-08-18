@@ -124,7 +124,7 @@ func TestExpression(t *testing.T) {
 
 	program := p.ParseProgram()
 	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain 2 statements. got=%d",
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d",
 			len(program.Statements))
 	}
 
@@ -348,6 +348,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"add(a + b + c * d / f + g)",
 			"add((((a+b)+((c*d)/f))+g))",
+		},
+		{
+			"x++",
+			"(x++)",
 		},
 	}
 
@@ -967,3 +971,106 @@ func TestReassignExp(t *testing.T) {
 	}
 
 }
+
+func testPostFix(t *testing.T, exp ast.Expression, left interface{}, operator string) bool {
+	infx, ok := exp.(*ast.PostfixExpression)
+	if !ok {
+		t.Errorf("not PostfixExpression. got %T", exp)
+		return false
+	}
+
+	if !testLiteralExpression(t, infx.Left, left) {
+		t.Errorf("post.left not as expected. got %T, want %T", infx.Left, left)
+		return false
+	}
+
+	if infx.Operator != operator {
+		t.Errorf("post.Operator not as expected. got %s, want %s", infx.Operator, operator)
+		return false
+	}
+
+	return true
+
+}
+
+func TestPostFixExp(t *testing.T) {
+	tests := []struct {
+		input    string
+		operator string
+		Literal  interface{}
+	}{
+		{"12++", "++", 12},
+		{"a++", "++", "a"},
+		{"a--", "--", "a"},
+		{"12--", "--", 12},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		prog := p.ParseProgram()
+		if len(prog.Statements) != 1 {
+			t.Errorf("length not 1. got %d", len(prog.Statements))
+			return
+		}
+
+		exp, ok := prog.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("not exp statement got %T", exp)
+
+		}
+
+		post, ok := exp.Expression.(*ast.PostfixExpression)
+
+		if !ok {
+			t.Errorf("stmt not PrefixExpression. got %T", post)
+			return
+		}
+
+		if !testPostFix(t, post, tt.Literal, tt.operator) {
+			t.Errorf("didnt pass")
+			return
+		}
+	}
+
+}
+
+// func TestForLoops(t *testing.T) {
+// 	tests := []struct {
+// 		input string
+// 	}{
+// 		{"for(let i =0; i<12; i++)"},
+// 	}
+
+// 	for _, tt := range tests {
+// 		l := lexer.New(tt.input)
+// 		p := New(l)
+// 		prog := p.ParseProgram()
+
+// 		if len(prog.Statements) != 1 {
+// 			t.Errorf("length not 1. got %d", len(prog.Statements))
+// 			return
+// 		}
+
+// 		stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+// 		if !ok {
+// 			t.Errorf("not expression statement. got %T", stmt)
+// 			return
+// 		}
+
+// 		exp, ok := stmt.Expression.(*ast.ForLoopExpressions)
+// 		if !ok {
+// 			t.Errorf("not for loop expression. got %T", exp)
+// 			return
+// 		}
+
+// 		if len(exp.Params) != 3 {
+// 			t.Errorf("not 3. got %d", len(exp.Params))
+// 			return
+// 		}
+//         // LET STATEMENT CANT BE EXPReSSION
+
+// 		start, ok := exp.Params[0].(*)
+
+// 	}
+// }

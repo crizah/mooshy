@@ -76,6 +76,24 @@ func evalInfix(r object.Object, l object.Object, operator string) object.Object 
 
 }
 
+func evalPostfix(left object.Object, operator string) object.Object {
+
+	l, ok := left.(*object.Integer)
+	if !ok {
+		return &object.Error{Msg: "Cant perform postfix operatios on non integer objects"}
+	}
+
+	switch operator {
+	case "++":
+		return &object.Integer{Value: l.Value + 1}
+	case "--":
+		return &object.Integer{Value: l.Value - 1}
+	default:
+		return &object.Error{Msg: "Not a valid postfix operator"}
+
+	}
+}
+
 func evalInfixOp(left object.Object, right object.Object, operator string) object.Object {
 	// REFINE THIS WTF EVEN IS THIS CODE.
 
@@ -285,6 +303,7 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 
 	case *ast.FunctionLiteral:
 		return &object.Function{Params: node.Parameter, Body: node.Body, Env: env}
+
 	case *ast.CallExpression:
 
 		fun := Eval(node.Function, env) // of this is len, then trigger builtIn
@@ -338,6 +357,9 @@ func Eval(node ast.Node, env *object.Enviorment) object.Object {
 		right := Eval(node.Right, env)
 		left := Eval(node.Left, env)
 		return evalInfix(right, left, node.Operator)
+	case *ast.PostfixExpression:
+		left := Eval(node.Left, env)
+		return evalPostfix(left, node.Operator)
 	case *ast.Program:
 		// return evalProgram(node)
 		return evalStatements(node.Statements, env)

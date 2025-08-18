@@ -55,11 +55,87 @@ type IndexExpression struct {
 	Index int64 // make this an expression so it can be an integerLiteral
 }
 
-type ForExpression struct {
-	Iterator  []Expression    // need to be only 3 arguments of type infix , infix, postfix
-	Constants InfixExpression // with infix being :
+// type ForExpression struct {
+// 	Iterator  []Expression    // need to be only 3 arguments of type infix , infix, postfix
+// 	Constants InfixExpression // with infix being :
 
+// 	// write its string anf tokenLiteral and all that
+// }
+
+// func (fe *ForExpression)
+
+type ForLoopExpressions struct {
+	Token token.Token
+	// for(i = 0; i<7; i++){}
+	Params []Expression // can be infixExpression or BlockExpression
+
+	// for(x: args){}
+	Body *BlockStatement
 	// write its string anf tokenLiteral and all that
+}
+
+type PostfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+}
+
+func (pf *PostfixExpression) TokenLiteral() string {
+	return pf.Token.Literal
+}
+
+func (fl *PostfixExpression) ExpressionNode() {}
+
+func (pe *PostfixExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString("(" + pe.Left.String() + pe.Operator + ")")
+	return output.String()
+
+}
+
+type BlockExpression struct {
+	Token     token.Token
+	Start     Expression // can be let i =0; just an ident or assign
+	Condition InfixExpression
+	Iterator  PostfixExpression
+}
+
+func (pe *BlockExpression) String() string {
+	var output bytes.Buffer
+
+	output.WriteString(pe.Start.String() + ", " + pe.Condition.String() + ", " + pe.Iterator.String())
+	return output.String()
+
+}
+
+func (pf *BlockExpression) TokenLiteral() string {
+	return pf.Token.Literal
+}
+
+func (fl *BlockExpression) ExpressionNode() {}
+
+func (fl *ForLoopExpressions) String() string {
+	var output bytes.Buffer
+	output.WriteString("for (")
+
+	for i, id := range fl.Params {
+		if i == len(fl.Params)-1 {
+			output.WriteString(id.String() + " ){")
+		}
+		output.WriteString(id.String() + " , ")
+
+	}
+
+	output.WriteString(fl.Body.String() + "}")
+	return output.String()
+
+}
+
+func (fl *ForLoopExpressions) ExpressionNode() {}
+
+func (fl *ForLoopExpressions) TokenLiteral() string {
+	return fl.Token.Literal
 }
 
 type ReAssignExpression struct {
@@ -85,17 +161,6 @@ func (re *ReAssignExpression) String() string {
 }
 func (re *ReAssignExpression) TokenLiteral() string {
 	return re.Token.Literal
-}
-
-type ForLoopExpressions struct {
-	Token token.Token
-	// for(i = 0; i<7; i++){}
-	Params ForExpression // need to be only 3
-	// can be array of expressions or can be an infix expression with colon in the middle
-	// for(x: args){}
-	Body *BlockStatement
-
-	// write its string anf tokenLiteral and all that
 }
 
 func (ar *IndexExpression) String() string {

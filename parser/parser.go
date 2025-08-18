@@ -15,37 +15,43 @@ const (
 	SUM                    // + or -
 	PRODUCT                // * or /
 	PREFIX                 // -X or !X
-	CALL                   // myFunction(X)
+	POSTFIX
+	CALL // myFunction(X)
 )
 
 var precedences = map[token.TokenType]int{
-	token.EQ:       EQUALS,
-	token.NOT_EQ:   EQUALS,
-	token.LESSER:   LESSGREATER,
-	token.GREATER:  LESSGREATER,
-	token.PLUS:     SUM,
-	token.MINUS:    SUM,
-	token.DIVIDE:   PRODUCT,
-	token.MULTIPLY: PRODUCT,
-	token.LPAREN:   CALL,
-	token.LBLOCK:   CALL,
-	token.ASSIGN:   CALL,
+	token.EQ:        EQUALS,
+	token.NOT_EQ:    EQUALS,
+	token.LESSER:    LESSGREATER,
+	token.GREATER:   LESSGREATER,
+	token.PLUS:      SUM,
+	token.MINUS:     SUM,
+	token.DIVIDE:    PRODUCT,
+	token.MULTIPLY:  PRODUCT,
+	token.LPAREN:    CALL,
+	token.LBLOCK:    CALL,
+	token.ASSIGN:    CALL,
+	token.INCREMENT: POSTFIX,
+	token.DECREMENT: POSTFIX,
 }
 
 type Parser struct {
-	lexer            *lexer.Lexer
-	currToken        token.Token
-	peekToken        token.Token
-	prefixParseFuncs map[token.TokenType]PrefixParseFunc
-	infixParseFuncs  map[token.TokenType]InfixParseFunc
-	Errors           []string
+	lexer             *lexer.Lexer
+	currToken         token.Token
+	peekToken         token.Token
+	prefixParseFuncs  map[token.TokenType]PrefixParseFunc
+	infixParseFuncs   map[token.TokenType]InfixParseFunc
+	postfixParseFuncs map[token.TokenType]PostfixParseFunc
+	// postfixParseFuncs map[token.TokenType]func(ast.Expression) ast.Expression
+
+	Errors []string
 }
 
 type (
 	PrefixParseFunc func() ast.Expression               // doesn't need to a function
 	InfixParseFunc  func(ast.Expression) ast.Expression // the input is the expression on the left  , x+y, so its x
 	// *ast.Identifier
-
+	PostfixParseFunc func(ast.Expression) ast.Expression
 )
 
 // func (p *Parser) helper(y ast.Identifier) ast.Expression {
@@ -71,15 +77,16 @@ func (p *Parser) currPrecedence() int {
 
 func (p *Parser) putPrefix(tok token.TokenType, pre PrefixParseFunc) {
 	p.prefixParseFuncs[tok] = pre
-	// exp := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
-	// // need to turn a function that returns ast.Expression type
-	// // i want to return a pointer of type *ast.Identifier
-	// p.prefixParseFuncs[p.currToken.Type] = exp
 
 }
 
 func (p *Parser) putInfix(tok token.TokenType, in InfixParseFunc) {
 	p.infixParseFuncs[tok] = in
+}
+
+func (p *Parser) putPostfix(tok token.TokenType, in PostfixParseFunc) {
+	p.postfixParseFuncs[tok] = in
+
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -128,6 +135,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	return yeah
 
+}
+func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
+	return &ast.PostfixExpression{Token: p.currToken, Operator: p.currToken.Literal, Left: left}
 }
 
 func (p *Parser) parseBooleanExpression() ast.Expression {
@@ -240,12 +250,46 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	return fl
 }
 
+// }
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	s := &ast.CallExpression{Token: p.currToken, Function: function}
 	// curr = (
 	s.Arguments = p.parseArguments()
 	return s
 }
+
+func (p *Parser) parseForLoopExpression() ast.Expression {
+	// cur = for
+	result := &ast.ForLoopExpressions{Token: p.currToken}
+	p.nextToken()
+	if !p.curTokenIs(token.LPAREN) {
+		e := "expectected ("
+		p.Errors = append(p.Errors, e)
+		return nil
+	}
+	// curr = (
+	p.nextToken()
+
+	result.Params = p.parseArguments()
+	result.Body = p.parseBlockStatement()
+
+	return result
+
+}
+
+// func (p *Parser) parseParams() ast.Expression {
+// 	result := &ast.BlockExpression{Token: p.currToken}
+
+// 	for !p.curTokenIs(token.COMMA) {
+// 		start := p.parseExpression(LOWEST)
+// 		// it can be assign, let or just ident
+// 		result.Start = start
+// 		p.nextToken()
+// 	}
+
+// 	return result
+
+// }
 
 func (p *Parser) parseReAssignExpression(ident ast.Expression) ast.Expression {
 	// x= 12
@@ -367,6 +411,7 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 	p.prefixParseFuncs = make(map[token.TokenType]PrefixParseFunc)
 	p.infixParseFuncs = make(map[token.TokenType]InfixParseFunc)
+	p.postfixParseFuncs = make(map[token.TokenType]PostfixParseFunc)
 	p.nextToken()
 	p.nextToken()
 
@@ -398,6 +443,11 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.putInfix(token.LBLOCK, p.parseIndexExpression)
 	p.putInfix(token.ASSIGN, p.parseReAssignExpression)
+
+	p.putPrefix(token.FOR, p.parseForLoopExpression)
+
+	p.putPostfix(token.INCREMENT, p.parsePostfixExpression)
+	p.putPostfix(token.DECREMENT, p.parsePostfixExpression)
 
 	return p
 }
@@ -461,14 +511,27 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 
 	leftExp := prefix() // we are calling these here
+
 	for !p.expectedPeek(token.SEMICOLON) && precedence < p.peekPrecedence() {
-		infix := p.infixParseFuncs[p.peekToken.Type] // parseInfixExpressin()
-		if infix == nil {
-			return leftExp
+		if infix := p.infixParseFuncs[p.peekToken.Type]; infix != nil {
+			p.nextToken()
+			leftExp = infix(leftExp)
+			continue
 		}
-		p.nextToken()
-		leftExp = infix(leftExp) // calling it here, with left = previous expression
+
+		// Then check if it's postfix
+		if postfix := p.postfixParseFuncs[p.peekToken.Type]; postfix != nil {
+			p.nextToken() // consume the postfix token
+			leftExp = postfix(leftExp)
+			continue
+		}
+
+		break
+
+		// p.nextToken()
+		// leftExp = infix(leftExp) // calling it here, with left = previous expression
 	}
+
 	return leftExp // returns InfixExpression type or can be PrefixExpression as well
 	// which will the type of the expresion in stmt.ExpressionStatement.Expression
 }

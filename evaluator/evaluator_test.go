@@ -329,6 +329,7 @@ func TestLetStatements(t *testing.T) {
 		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
 		{"let a = 5; let b = a; b;", 5},
 		{`let a = "meow"; let b = "wwww"; let c = a + b + "!!"; c;`, "meowwwww!!"},
+		{"let x = 12++;", 13},
 	}
 
 	for _, tt := range tests {
@@ -441,6 +442,37 @@ func TestLenFunc(t *testing.T) {
 		}
 
 	}
+}
+
+func TestPostFix(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"12++", 13},
+		{"13--", 12},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		testPostfixExp(t, evaluated, int64(tt.expected))
+	}
+}
+
+func testPostfixExp(t *testing.T, obj object.Object, ex int64) bool {
+	post, ok := obj.(*object.Integer)
+	if !ok {
+		t.Errorf("Not integer object. got %T", post)
+		return false
+	}
+
+	if post.Value != ex {
+		t.Errorf("expevcted %d, got %d", ex, post.Value)
+		return false
+	}
+
+	return true
+
 }
 
 // func TestReassign(t *testing.T) {
